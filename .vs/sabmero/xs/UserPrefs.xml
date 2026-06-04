@@ -1,0 +1,49 @@
+﻿<Properties StartupConfiguration="{8C5191D5-7E73-4673-A585-DA6F9EF1B582}|https">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="sabmero/appsettings.json">
+    <Files>
+      <File FileName="sabmero/Program.cs" />
+      <File FileName="sabmero/Properties/launchSettings.json" />
+      <File FileName="sabmero/Models/User.cs" />
+      <File FileName="sabmero/Models/OtpCode.cs" />
+      <File FileName="sabmero/Models/Vendor.cs" />
+      <File FileName="sabmero/Models/Category.cs" />
+      <File FileName="sabmero/Models/Product.cs" />
+      <File FileName="sabmero/Models/Order.cs" />
+      <File FileName="sabmero/Models/OrderItem.cs" />
+      <File FileName="sabmero/Models/ServiceBooking.cs" />
+      <File FileName="sabmero/Models/PromoCode.cs" />
+      <File FileName="sabmero/Models/ReturnRequest.cs" />
+      <File FileName="sabmero/Models/Review.cs" />
+      <File FileName="sabmero/Data/AppDbContext.cs" />
+      <File FileName="sabmero/DTOs/Auth/RegisterDto.cs" />
+      <File FileName="sabmero/DTOs/Auth/LoginDto.cs" />
+      <File FileName="sabmero/DTOs/Auth/OtpDto.cs" />
+      <File FileName="sabmero/DTOs/Auth/AuthResponseDto.cs" />
+      <File FileName="sabmero/Services/IJwtService.cs" />
+      <File FileName="sabmero/Services/JwtService.cs" />
+      <File FileName="sabmero/Services/IAuthService.cs" />
+      <File FileName="sabmero/Services/AuthService.cs" />
+      <File FileName="sabmero/Controllers/HealthController.cs" />
+      <File FileName="sabmero/Controllers/AuthController.cs" />
+      <File FileName="sabmero/appsettings.json" Line="10" Column="5" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="sabmero" expanded="True">
+            <Node name="sabmero" expanded="True">
+              <Node name="appsettings.json" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.sabmero PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>
