@@ -31,7 +31,9 @@ public class JwtService : IJwtService
         };
 
         // Sign the token with our secret key from appsettings.json
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:SecretKey"]!));
+        var secret = Environment.GetEnvironmentVariable("JWT_SECRET")
+              ?? _config["JwtSettings:SecretKey"]!;
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

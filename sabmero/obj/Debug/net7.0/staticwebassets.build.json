@@ -1,11 +1,19 @@
 {
   "Version": 1,
-  "Hash": "50lINnZF2o/LrPfeugrMTSXXH2Ca3D99jQz8EcMrsC8=",
+  "Hash": "fmnTjmmXSknIPqzWBdRWloUcTskFmLE3/RAfgXjb8YY=",
   "Source": "sabmero",
   "BasePath": "_content/sabmero",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "sabmero/wwwroot",
+      "Source": "sabmero",
+      "ContentRoot": "/Users/ronitshrivastav/Projects/SabMero/sabmero/sabmero/wwwroot/",
+      "BasePath": "_content/sabmero",
+      "Pattern": "**"
+    }
+  ],
   "Assets": []
 }

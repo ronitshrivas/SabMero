@@ -50,3 +50,4 @@
 /Users/ronitshrivastav/Projects/SabMero/sabmero/sabmero/obj/Debug/net7.0/sabmero.pdb
 /Users/ronitshrivastav/Projects/SabMero/sabmero/sabmero/obj/Debug/net7.0/sabmero.genruntimeconfig.cache
 /Users/ronitshrivastav/Projects/SabMero/sabmero/sabmero/obj/Debug/net7.0/ref/sabmero.dll
+/Users/ronitshrivastav/Projects/SabMero/sabmero/sabmero/bin/Debug/net7.0/sabmero.staticwebassets.runtime.json
