@@ -28,6 +28,18 @@
     <None Remove="DTOs\Auth\" />
     <None Remove="Services\" />
     <None Remove="Controllers\" />
+    <None Remove="Helpers\" />
+    <None Remove="DTOs\Common\" />
+    <None Remove="DTOs\Category\" />
+    <None Remove="DTOs\Product\" />
+    <None Remove="DTOs\Vendor\" />
+    <None Remove="DTOs\Order\" />
+    <None Remove="DTOs\Service\" />
+    <None Remove="DTOs\Admin\" />
+    <None Remove="DTOs\Promo\" />
+    <None Remove="DTOs\Return\" />
+    <None Remove="DTOs\Review\" />
+    <None Remove="DTOs\Payment\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
@@ -36,5 +48,17 @@
     <Folder Include="DTOs\Auth\" />
     <Folder Include="Services\" />
     <Folder Include="Controllers\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="DTOs\Common\" />
+    <Folder Include="DTOs\Category\" />
+    <Folder Include="DTOs\Product\" />
+    <Folder Include="DTOs\Vendor\" />
+    <Folder Include="DTOs\Order\" />
+    <Folder Include="DTOs\Service\" />
+    <Folder Include="DTOs\Admin\" />
+    <Folder Include="DTOs\Promo\" />
+    <Folder Include="DTOs\Return\" />
+    <Folder Include="DTOs\Review\" />
+    <Folder Include="DTOs\Payment\" />
   </ItemGroup>
 </Project>

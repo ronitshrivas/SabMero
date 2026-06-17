@@ -76,6 +76,24 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Phase 3 — Shop
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IVendorService, VendorService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+// Phase 4 — Services & Admin
+builder.Services.AddScoped<IServiceBookingService, ServiceBookingService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+
+// Phase 5 — Promos, Returns, Reviews, Payments, Files, Notifications
+builder.Services.AddScoped<IPromoService, PromoService>();
+builder.Services.AddScoped<IReturnService, ReturnService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // 4. CONTROLLERS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -170,6 +188,12 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors("AllowAll");
+
+// Serve uploaded images/documents from wwwroot (e.g. /uploads/products/abc.jpg).
+// Ensure the folder exists so the very first request doesn't fail on a fresh container.
+Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 app.UseAuthentication();    // ← must be BEFORE UseAuthorization
 app.UseAuthorization();

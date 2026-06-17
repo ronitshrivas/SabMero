@@ -1,0 +1,110 @@
+﻿using Microsoft.EntityFrameworkCore;
+using sabmero.Data;
+using sabmero.DTOs.Promo;
+using sabmero.Models;
+
+namespace sabmero.Services;
+
+// Admin manages discount codes; customers validate them at checkout.
+public class PromoService : IPromoService
+{
+    private readonly AppDbContext _db;
+
+    public PromoService(AppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<List<PromoDto>> GetAllAsync()
+        => await _db.PromoCodes
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new PromoDto
+            {
+                Id = p.Id,
+                Code = p.Code,
+                DiscountPercent = p.DiscountPercent,
+                ExpiresAt = p.ExpiresAt,
+                IsActive = p.IsActive,
+                IsExpired = p.ExpiresAt < DateTime.UtcNow
+            })
+            .ToListAsync();
+
+    public async Task<(bool Success, string Message, PromoDto? Data)> CreateAsync(CreatePromoDto dto)
+    {
+        var code = dto.Code.Trim().ToUpper();
+        bool exists = await _db.PromoCodes.AnyAsync(p => p.Code.ToUpper() == code);
+        if (exists)
+            return (false, "This promo code already exists.", null);
+
+        var promo = new PromoCode
+        {
+            Code = code,
+            DiscountPercent = dto.DiscountPercent,
+            ExpiresAt = DateTime.SpecifyKind(dto.ExpiresAt, DateTimeKind.Utc),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.PromoCodes.Add(promo);
+        await _db.SaveChangesAsync();
+        return (true, "Promo code created.", Map(promo));
+    }
+
+    public async Task<(bool Success, string Message, PromoDto? Data)> UpdateAsync(int id, UpdatePromoDto dto)
+    {
+        var promo = await _db.PromoCodes.FindAsync(id);
+        if (promo == null)
+            return (false, "Promo code not found.", null);
+
+        promo.DiscountPercent = dto.DiscountPercent;
+        promo.ExpiresAt = DateTime.SpecifyKind(dto.ExpiresAt, DateTimeKind.Utc);
+        promo.IsActive = dto.IsActive;
+        await _db.SaveChangesAsync();
+        return (true, "Promo code updated.", Map(promo));
+    }
+
+    public async Task<(bool Success, string Message)> DeleteAsync(int id)
+    {
+        var promo = await _db.PromoCodes.FindAsync(id);
+        if (promo == null)
+            return (false, "Promo code not found.");
+
+        _db.PromoCodes.Remove(promo);
+        await _db.SaveChangesAsync();
+        return (true, "Promo code deleted.");
+    }
+
+    public async Task<(bool Success, string Message, PromoValidationResult? Data)> ValidateAsync(ValidatePromoDto dto)
+    {
+        var code = dto.Code.Trim().ToUpper();
+        var promo = await _db.PromoCodes.FirstOrDefaultAsync(p => p.Code.ToUpper() == code);
+
+        if (promo == null || !promo.IsActive)
+            return (false, "Invalid promo code.", null);
+        if (promo.ExpiresAt < DateTime.UtcNow)
+            return (false, "This promo code has expired.", null);
+
+        var discountAmount = Math.Round(dto.CartSubTotal * (promo.DiscountPercent / 100m), 2);
+        var newTotal = dto.CartSubTotal - discountAmount;
+        if (newTotal < 0) newTotal = 0;
+
+        return (true, "Promo code applied.", new PromoValidationResult
+        {
+            Valid = true,
+            Code = promo.Code,
+            DiscountPercent = promo.DiscountPercent,
+            DiscountAmount = discountAmount,
+            NewTotal = newTotal
+        });
+    }
+
+    private static PromoDto Map(PromoCode p) => new()
+    {
+        Id = p.Id,
+        Code = p.Code,
+        DiscountPercent = p.DiscountPercent,
+        ExpiresAt = p.ExpiresAt,
+        IsActive = p.IsActive,
+        IsExpired = p.ExpiresAt < DateTime.UtcNow
+    };
+}

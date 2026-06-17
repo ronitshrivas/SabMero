@@ -30,7 +30,7 @@ public class HealthController : ControllerBase
             status = "sabmero API is running ✅",
             database = dbOk ? "PostgreSQL connected ✅" : "Database NOT connected ❌",
             timestamp = DateTime.UtcNow,
-            phase = "Phase 1 & 2 — Auth"
+            phase = "All phases (1–5) — Auth, Shop, Services, Admin, Payments"
         });
     }
 }
