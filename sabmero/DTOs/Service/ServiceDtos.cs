@@ -26,6 +26,10 @@ public class CreateBookingDto
 
     // "Cash" | "QR"
     public string PaymentMethod { get; set; } = "Cash";
+
+    // Required ONLY when PaymentMethod == "QR": the customer's payment proof.
+    // Upload via POST /api/uploads/payment first, then send the returned path here.
+    public string? PaymentScreenshotPath { get; set; }
 }
 
 // ── What the API SENDS BACK for a booking ──
@@ -37,6 +41,7 @@ public class BookingDto
     public string CustomerPhone { get; set; } = string.Empty;
     public int? TechnicianId { get; set; }
     public string? TechnicianName { get; set; }
+    public string? TechnicianPhone { get; set; }    // populated once status is Approved (technician assigned)
     public string ServiceType { get; set; } = string.Empty;
     public DateTime BookingDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
@@ -48,6 +53,7 @@ public class BookingDto
     public DateTime? CheckInTime { get; set; }
     public DateTime? CompletedTime { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
+    public string? PaymentScreenshotPath { get; set; }
     public decimal? ServiceCharge { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -63,7 +69,7 @@ public class AssignTechnicianDto
 public class UpdateBookingStatusDto
 {
     [Required]
-    // "Pending" | "Processing" | "OnTheWay" | "Completed"
+    // "Pending" | "Approved" | "Processing" | "OnTheWay" | "Completed"
     public string Status { get; set; } = string.Empty;
 
     // Set when the technician completes the job and enters the final charge.

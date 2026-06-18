@@ -28,6 +28,14 @@ public class ServiceBookingService : IServiceBookingService
         if (dto.BookingDate.Date < DateTime.UtcNow.Date)
             return (false, "Booking date cannot be in the past.", null);
 
+        // Normalize the payment method up front.
+        var paymentMethod = dto.PaymentMethod == "QR" ? "QR" : "Cash";
+
+        // Cash → proceed normally. QR → the customer must upload a payment
+        // screenshot before the booking can be completed.
+        if (paymentMethod == "QR" && string.IsNullOrWhiteSpace(dto.PaymentScreenshotPath))
+            return (false, "Please upload a screenshot of your QR payment to complete the booking.", null);
+
         var booking = new ServiceBooking
         {
             UserId = userId,
@@ -39,7 +47,8 @@ public class ServiceBookingService : IServiceBookingService
             ServiceAddress = dto.ServiceAddress.Trim(),
             DamageImagePath = dto.DamageImagePath,
             Status = "Pending",
-            PaymentMethod = dto.PaymentMethod == "QR" ? "QR" : "Cash",
+            PaymentMethod = paymentMethod,
+            PaymentScreenshotPath = paymentMethod == "QR" ? dto.PaymentScreenshotPath : null,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -90,7 +99,17 @@ public class ServiceBookingService : IServiceBookingService
         if (role == "Technician" && booking.TechnicianId != userId)
             return (false, "This booking is not assigned to you.", null);
 
-        return (true, "Found.", await BuildDtoAsync(bookingId));
+        var data = await BuildDtoAsync(bookingId);
+
+        // While the booking is still under review (Pending / no technician yet),
+        // tell the customer it's being reviewed instead of leaking a raw error
+        // or empty technician details. Once approved, the technician's name and
+        // phone come back in the data payload.
+        var message = (booking.Status == "Pending" || booking.TechnicianId == null)
+            ? "Your booking is currently under review. Once your status is approved, a technician will be assigned to you."
+            : "Found.";
+
+        return (true, message, data);
     }
 
     public async Task<(bool Success, string Message)> AssignTechnicianAsync(int bookingId, int technicianId)
@@ -104,8 +123,10 @@ public class ServiceBookingService : IServiceBookingService
             return (false, "That user is not a technician.");
 
         booking.TechnicianId = technicianId;
+        // Assigning a technician approves the booking and reveals the
+        // technician's details to the customer.
         if (booking.Status == "Pending")
-            booking.Status = "Processing";
+            booking.Status = "Approved";
 
         await _db.SaveChangesAsync();
         return (true, "Technician assigned.");
@@ -113,7 +134,7 @@ public class ServiceBookingService : IServiceBookingService
 
     public async Task<(bool Success, string Message)> UpdateStatusAsync(int userId, string role, int bookingId, UpdateBookingStatusDto dto)
     {
-        var allowed = new[] { "Pending", "Processing", "OnTheWay", "Completed" };
+        var allowed = new[] { "Pending", "Approved", "Processing", "OnTheWay", "Completed" };
         if (!allowed.Contains(dto.Status))
             return (false, "Invalid status.");
 
@@ -124,6 +145,11 @@ public class ServiceBookingService : IServiceBookingService
         // Technician can only update bookings assigned to them.
         if (role == "Technician" && booking.TechnicianId != userId)
             return (false, "This booking is not assigned to you.");
+
+        // A booking can only be Approved once a technician has been assigned,
+        // because approval is what surfaces the technician's details.
+        if (dto.Status == "Approved" && booking.TechnicianId == null)
+            return (false, "Assign a technician before approving this booking.");
 
         booking.Status = dto.Status;
 
@@ -178,8 +204,15 @@ public class ServiceBookingService : IServiceBookingService
         if (b == null) return null;
 
         string? techName = null;
-        if (b.TechnicianId.HasValue)
-            techName = (await _db.Users.FindAsync(b.TechnicianId.Value))?.FullName;
+        string? techPhone = null;
+        // Only reveal the technician's details once the booking is approved
+        // (i.e. a technician has actually been assigned to this customer).
+        if (b.TechnicianId.HasValue && b.Status != "Pending")
+        {
+            var tech = await _db.Users.FindAsync(b.TechnicianId.Value);
+            techName = tech?.FullName;
+            techPhone = tech?.Phone;
+        }
 
         return new BookingDto
         {
@@ -189,6 +222,7 @@ public class ServiceBookingService : IServiceBookingService
             CustomerPhone = b.User.Phone,
             TechnicianId = b.TechnicianId,
             TechnicianName = techName,
+            TechnicianPhone = techPhone,
             ServiceType = b.ServiceType,
             BookingDate = b.BookingDate,
             TimeSlot = b.TimeSlot,
@@ -200,6 +234,7 @@ public class ServiceBookingService : IServiceBookingService
             CheckInTime = b.CheckInTime,
             CompletedTime = b.CompletedTime,
             PaymentMethod = b.PaymentMethod,
+            PaymentScreenshotPath = b.PaymentScreenshotPath,
             ServiceCharge = b.ServiceCharge,
             CreatedAt = b.CreatedAt
         };

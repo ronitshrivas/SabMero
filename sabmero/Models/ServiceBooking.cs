@@ -4,7 +4,9 @@ namespace sabmero.Models;
 
 // A customer's booking for an on-site repair technician.
 // ServiceType: "Electrical" | "CCTV" | "Tech"
-// Status flow:  Pending → Processing → OnTheWay → Completed
+// Status flow:  Pending → Approved → Processing → OnTheWay → Completed
+//   Pending  : just created, under admin review (no technician yet)
+//   Approved : admin assigned a technician → customer can now see tech details
 public class ServiceBooking
 {
     public int Id { get; set; }
@@ -17,10 +19,11 @@ public class ServiceBooking
     public double Longitude { get; set; }
     public string ServiceAddress { get; set; } = string.Empty;
     public string? DamageImagePath { get; set; }             // photo uploaded by customer
-    public string Status { get; set; } = "Pending";          // "Pending"|"Processing"|"OnTheWay"|"Completed"
+    public string Status { get; set; } = "Pending";          // "Pending"|"Approved"|"Processing"|"OnTheWay"|"Completed"
     public DateTime? CheckInTime { get; set; }               // technician taps "Check-In"
     public DateTime? CompletedTime { get; set; }             // technician taps "Complete"
     public string PaymentMethod { get; set; } = "Cash";      // "Cash" | "QR"
+    public string? PaymentScreenshotPath { get; set; }       // QR payment proof — required when PaymentMethod == "QR"
     public decimal? ServiceCharge { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

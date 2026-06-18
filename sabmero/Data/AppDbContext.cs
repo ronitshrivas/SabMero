@@ -154,6 +154,7 @@ public class AppDbContext : DbContext
             e.Property(sb => sb.ServiceAddress).HasMaxLength(400).IsRequired();
             e.Property(sb => sb.Status).HasMaxLength(20).HasDefaultValue("Pending");
             e.Property(sb => sb.PaymentMethod).HasMaxLength(10).HasDefaultValue("Cash");
+            e.Property(sb => sb.PaymentScreenshotPath).HasMaxLength(400);
             e.Property(sb => sb.ServiceCharge).HasPrecision(18, 2);
         });
 
@@ -236,6 +237,116 @@ public class AppDbContext : DbContext
             new Category { Id = 2, Name = "Clothing", IsActive = true, CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 3, Name = "Footwear", IsActive = true, CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 4, Name = "Grocery", IsActive = true, CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        SeedMockData(modelBuilder);
+    }
+
+    // ── MOCK DATA FOR TESTING ──────────────────────────────────────────────
+    // Inserted on first migration alongside the defaults above.
+    // Every seeded account uses the SAME password:  Password@123
+    //   Customers   : 9811111111 (Ramesh) , 9822222222 (Sita)
+    //   Technicians : 9833333333 (Bibek)  , 9844444444 (Kiran)
+    //   Vendor      : 9855555555 (Hari — owns "Hari Electronics Store")
+    // The bcrypt hash below is fixed so migrations stay deterministic.
+    private static void SeedMockData(ModelBuilder modelBuilder)
+    {
+        const string mockHash = "$2b$11$J7WSywJFE37tTzHqVU321eYep8c4Muw0ewXAgQelgLn/Q.y3iUiZm"; // "Password@123"
+        var seedDate = new DateTime(2026, 6, 4, 0, 0, 0, DateTimeKind.Utc);
+
+        // ── Mock users (Id 1 is the Admin seeded above) ──────────────────────
+        modelBuilder.Entity<User>().HasData(
+            new User { Id = 2, FullName = "Ramesh Thapa", Phone = "9811111111", Email = "ramesh@example.com", PasswordHash = mockHash, Address = "Baneshwor, Kathmandu", Role = "Customer", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
+            new User { Id = 3, FullName = "Sita Gurung", Phone = "9822222222", Email = "sita@example.com", PasswordHash = mockHash, Address = "Lakeside, Pokhara", Role = "Customer", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
+            new User { Id = 4, FullName = "Bibek Shrestha", Phone = "9833333333", Email = "bibek.tech@example.com", PasswordHash = mockHash, Address = "Kalanki, Kathmandu", Role = "Technician", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
+            new User { Id = 5, FullName = "Kiran Magar", Phone = "9844444444", Email = "kiran.tech@example.com", PasswordHash = mockHash, Address = "Lalitpur, Kathmandu", Role = "Technician", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
+            new User { Id = 6, FullName = "Hari Bahadur", Phone = "9855555555", Email = "hari.vendor@example.com", PasswordHash = mockHash, Address = "New Road, Kathmandu", Role = "Vendor", IsKycVerified = true, IsActive = true, CreatedAt = seedDate }
+        );
+
+        // ── Mock vendor (owned by Hari, Id 6) ────────────────────────────────
+        modelBuilder.Entity<Vendor>().HasData(
+            new Vendor { Id = 1, UserId = 6, BusinessName = "Hari Electronics Store", BusinessAddress = "New Road, Kathmandu", IsApproved = true, CommissionRate = 10.0m, CreatedAt = seedDate }
+        );
+
+        // ── Mock products ────────────────────────────────────────────────────
+        modelBuilder.Entity<Product>().HasData(
+            new Product { Id = 1, VendorId = 1, CategoryId = 1, Name = "Wireless Earbuds", Description = "Bluetooth 5.3 noise-cancelling earbuds.", Price = 2499m, Stock = 50, IsActive = true, CreatedAt = seedDate },
+            new Product { Id = 2, VendorId = 1, CategoryId = 1, Name = "Smart LED Bulb", Description = "Wi-Fi controlled 9W colour-changing bulb.", Price = 899m, Stock = 120, IsActive = true, CreatedAt = seedDate },
+            new Product { Id = 3, VendorId = 1, CategoryId = 2, Name = "Cotton T-Shirt", Description = "Unisex round-neck cotton t-shirt.", Price = 699m, Stock = 200, SizeOptions = "[\"S\",\"M\",\"L\",\"XL\"]", ColorOptions = "[\"Black\",\"White\",\"Navy\"]", IsActive = true, CreatedAt = seedDate },
+            new Product { Id = 4, VendorId = 1, CategoryId = 4, Name = "Basmati Rice", Description = "Premium aged basmati rice.", Price = 180m, Stock = 300, Unit = "Kg", IsActive = true, CreatedAt = seedDate }
+        );
+
+        // ── Mock service bookings ────────────────────────────────────────────
+        // 1) Cash booking, still under review (Pending, no technician).
+        // 2) QR booking with payment screenshot, still under review.
+        // 3) Approved booking — technician (Bibek) assigned, details visible.
+        // 4) Completed booking with a final service charge.
+        modelBuilder.Entity<ServiceBooking>().HasData(
+            new ServiceBooking
+            {
+                Id = 1,
+                UserId = 2,
+                TechnicianId = null,
+                ServiceType = "Electrical",
+                BookingDate = new DateTime(2026, 6, 20, 0, 0, 0, DateTimeKind.Utc),
+                TimeSlot = "10:00 AM - 12:00 PM",
+                Latitude = 27.7172,
+                Longitude = 85.3240,
+                ServiceAddress = "Baneshwor, Kathmandu",
+                Status = "Pending",
+                PaymentMethod = "Cash",
+                CreatedAt = seedDate
+            },
+            new ServiceBooking
+            {
+                Id = 2,
+                UserId = 3,
+                TechnicianId = null,
+                ServiceType = "CCTV",
+                BookingDate = new DateTime(2026, 6, 21, 0, 0, 0, DateTimeKind.Utc),
+                TimeSlot = "02:00 PM - 04:00 PM",
+                Latitude = 28.2096,
+                Longitude = 83.9856,
+                ServiceAddress = "Lakeside, Pokhara",
+                Status = "Pending",
+                PaymentMethod = "QR",
+                PaymentScreenshotPath = "/uploads/payment/mock-qr-payment-1.jpg",
+                CreatedAt = seedDate
+            },
+            new ServiceBooking
+            {
+                Id = 3,
+                UserId = 2,
+                TechnicianId = 4,
+                ServiceType = "Tech",
+                BookingDate = new DateTime(2026, 6, 19, 0, 0, 0, DateTimeKind.Utc),
+                TimeSlot = "09:00 AM - 11:00 AM",
+                Latitude = 27.7172,
+                Longitude = 85.3240,
+                ServiceAddress = "Baneshwor, Kathmandu",
+                Status = "Approved",
+                PaymentMethod = "Cash",
+                CreatedAt = seedDate
+            },
+            new ServiceBooking
+            {
+                Id = 4,
+                UserId = 3,
+                TechnicianId = 5,
+                ServiceType = "Electrical",
+                BookingDate = new DateTime(2026, 6, 15, 0, 0, 0, DateTimeKind.Utc),
+                TimeSlot = "01:00 PM - 03:00 PM",
+                Latitude = 28.2096,
+                Longitude = 83.9856,
+                ServiceAddress = "Lakeside, Pokhara",
+                Status = "Completed",
+                CheckInTime = new DateTime(2026, 6, 15, 7, 15, 0, DateTimeKind.Utc),
+                CompletedTime = new DateTime(2026, 6, 15, 9, 30, 0, DateTimeKind.Utc),
+                PaymentMethod = "QR",
+                PaymentScreenshotPath = "/uploads/payment/mock-qr-payment-2.jpg",
+                ServiceCharge = 1500m,
+                CreatedAt = seedDate
+            }
         );
     }
 }

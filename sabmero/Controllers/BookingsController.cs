@@ -51,7 +51,7 @@ public class BookingsController : ControllerBase
     {
         var (success, message, data) = await _service.GetByIdAsync(User.GetUserId(), User.GetRole(), id);
         return success
-            ? Ok(new { success = true, data })
+            ? Ok(new { success = true, message, data })
             : NotFound(new { success = false, message });
     }
 

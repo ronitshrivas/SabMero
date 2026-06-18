@@ -7,6 +7,7 @@ namespace sabmero.Controllers;
 // ── FILE UPLOAD ENDPOINTS ─────────────────────────────────────────────────────
 //  POST   /api/uploads/product   → upload a product image     (Vendor/Admin)
 //  POST   /api/uploads/damage    → upload a damage photo       (Customer)
+//  POST   /api/uploads/payment   → upload a QR payment proof    (Customer)
 //  POST   /api/uploads/kyc       → upload a KYC / business doc  (any logged-in)
 //
 // Send as multipart/form-data with a single field named "file".
@@ -32,6 +33,11 @@ public class UploadsController : ControllerBase
 
     [HttpPost("damage")]
     public Task<IActionResult> Damage(IFormFile file) => Handle(file, "damage");
+
+    // QR payment proof — the customer uploads here, then sends the returned
+    // path as CreateBookingDto.PaymentScreenshotPath when booking with QR.
+    [HttpPost("payment")]
+    public Task<IActionResult> Payment(IFormFile file) => Handle(file, "payment");
 
     [HttpPost("kyc")]
     public Task<IActionResult> Kyc(IFormFile file) => Handle(file, "kyc");

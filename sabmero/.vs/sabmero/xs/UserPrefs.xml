@@ -1,71 +1,88 @@
 ﻿<Properties StartupConfiguration="{13B3731C-7F72-465A-888A-532DE0458742}|http">
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.ItemProperties.sabmero PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
     <Files>
-      <File FileName="Program.cs" Line="161" Column="9" />
-      <File FileName="Helpers/ClaimsHelper.cs" Line="24" Column="2" />
-      <File FileName="DTOs/Common/ApiResponse.cs" Line="28" Column="2" />
-      <File FileName="DTOs/Category/CategoryDtos.cs" Line="34" Column="2" />
-      <File FileName="DTOs/Product/ProductDtos.cs" Line="64" Column="30" />
-      <File FileName="DTOs/Vendor/VendorDtos.cs" Line="25" Column="43" />
-      <File FileName="DTOs/Order/OrderDtos.cs" Line="84" Column="2" />
-      <File FileName="DTOs/Service/ServiceDtos.cs" Line="71" Column="2" />
-      <File FileName="DTOs/Admin/AdminDtos.cs" Line="77" Column="2" />
-      <File FileName="DTOs/Promo/PromoDtos.cs" Line="60" Column="2" />
-      <File FileName="DTOs/Return/ReturnDtos.cs" Line="38" Column="2" />
-      <File FileName="DTOs/Review/ReviewDtos.cs" Line="30" Column="2" />
-      <File FileName="DTOs/Payment/PaymentDtos.cs" Line="33" Column="2" />
-      <File FileName="Services/ICategoryService.cs" Line="13" Column="2" />
-      <File FileName="Services/CategoryService.cs" Line="123" Column="2" />
-      <File FileName="Services/IVendorService.cs" Line="22" Column="2" />
-      <File FileName="Services/VendorService.cs" Line="101" Column="2" />
-      <File FileName="Services/IProductService.cs" Line="28" Column="2" />
-      <File FileName="Services/ProductService.cs" Line="185" Column="6" />
-      <File FileName="Services/IOrderService.cs" Line="16" Column="1" />
-      <File FileName="Services/OrderService.cs" Line="308" Column="2" />
-      <File FileName="Services/IServiceBookingService.cs" Line="31" Column="2" />
-      <File FileName="Services/ServiceBookingService.cs" Line="207" Column="2" />
-      <File FileName="Services/IAdminService.cs" Line="13" Column="2" />
-      <File FileName="Services/AdminService.cs" Line="144" Column="2" />
-      <File FileName="Services/IPromoService.cs" Line="15" Column="2" />
-      <File FileName="Services/PromoService.cs" Line="110" Column="2" />
-      <File FileName="Services/IReturnService.cs" Line="19" Column="2" />
-      <File FileName="Services/ReturnService.cs" Line="117" Column="2" />
-      <File FileName="Services/IReviewService.cs" Line="16" Column="2" />
-      <File FileName="Services/ReviewService.cs" Line="103" Column="2" />
-      <File FileName="Services/IPaymentService.cs" Line="13" Column="2" />
-      <File FileName="Services/PaymentService.cs" Line="79" Column="2" />
-      <File FileName="Services/INotificationService.cs" Line="10" Column="2" />
-      <File FileName="Services/NotificationService.cs" Line="38" Column="2" />
-      <File FileName="Services/IFileService.cs" Line="9" Column="2" />
-      <File FileName="Services/FileService.cs" Line="59" Column="2" />
-      <File FileName="Controllers/CategoriesController.cs" Line="75" Column="2" />
-      <File FileName="Controllers/ProductsController.cs" Line="96" Column="2" />
-      <File FileName="Controllers/VendorsController.cs" Line="57" Column="2" />
-      <File FileName="Controllers/OrdersController.cs" Line="94" Column="2" />
+      <File FileName="Program.cs" Line="167" Column="1" />
+      <File FileName="Helpers/ClaimsHelper.cs" />
+      <File FileName="DTOs/Common/ApiResponse.cs" />
+      <File FileName="DTOs/Category/CategoryDtos.cs" />
+      <File FileName="DTOs/Product/ProductDtos.cs" />
+      <File FileName="DTOs/Vendor/VendorDtos.cs" />
+      <File FileName="DTOs/Order/OrderDtos.cs" />
+      <File FileName="DTOs/Service/ServiceDtos.cs" Line="77" Column="2" />
+      <File FileName="DTOs/Admin/AdminDtos.cs" />
+      <File FileName="DTOs/Promo/PromoDtos.cs" />
+      <File FileName="DTOs/Return/ReturnDtos.cs" />
+      <File FileName="DTOs/Review/ReviewDtos.cs" />
+      <File FileName="DTOs/Payment/PaymentDtos.cs" />
+      <File FileName="Services/ICategoryService.cs" />
+      <File FileName="Services/CategoryService.cs" />
+      <File FileName="Services/IVendorService.cs" />
+      <File FileName="Services/VendorService.cs" />
+      <File FileName="Services/IProductService.cs" />
+      <File FileName="Services/ProductService.cs" />
+      <File FileName="Services/IOrderService.cs" />
+      <File FileName="Services/OrderService.cs" />
+      <File FileName="Services/IServiceBookingService.cs" />
+      <File FileName="Services/ServiceBookingService.cs" Line="242" Column="2" />
+      <File FileName="Services/IAdminService.cs" />
+      <File FileName="Services/AdminService.cs" />
+      <File FileName="Services/IPromoService.cs" />
+      <File FileName="Services/PromoService.cs" />
+      <File FileName="Services/IReturnService.cs" />
+      <File FileName="Services/ReturnService.cs" />
+      <File FileName="Services/IReviewService.cs" />
+      <File FileName="Services/ReviewService.cs" />
+      <File FileName="Services/IPaymentService.cs" />
+      <File FileName="Services/PaymentService.cs" />
+      <File FileName="Services/INotificationService.cs" />
+      <File FileName="Services/NotificationService.cs" />
+      <File FileName="Services/IFileService.cs" />
+      <File FileName="Services/FileService.cs" />
+      <File FileName="Controllers/CategoriesController.cs" />
+      <File FileName="Controllers/ProductsController.cs" />
+      <File FileName="Controllers/VendorsController.cs" />
+      <File FileName="Controllers/OrdersController.cs" />
       <File FileName="Controllers/BookingsController.cs" Line="85" Column="2" />
-      <File FileName="Controllers/AdminController.cs" Line="129" Column="2" />
-      <File FileName="Controllers/PromosController.cs" Line="74" Column="2" />
-      <File FileName="Controllers/ReturnsController.cs" Line="57" Column="2" />
-      <File FileName="Controllers/ReviewsController.cs" Line="44" Column="2" />
-      <File FileName="Controllers/PaymentsController.cs" Line="48" Column="2" />
-      <File FileName="Controllers/UploadsController.cs" Line="46" Column="2" />
-      <File FileName="Controllers/HealthController.cs" Line="36" Column="2" />
+      <File FileName="Controllers/AdminController.cs" />
+      <File FileName="Controllers/PromosController.cs" />
+      <File FileName="Controllers/ReturnsController.cs" />
+      <File FileName="Controllers/ReviewsController.cs" />
+      <File FileName="Controllers/PaymentsController.cs" />
+      <File FileName="Controllers/UploadsController.cs" Line="52" Column="2" />
+      <File FileName="Controllers/HealthController.cs" />
+      <File FileName="Services/JwtService.cs" Line="38" Column="1" />
+      <File FileName="Data/AppDbContext.cs" Line="157" Column="40" />
+      <File FileName="Models/ServiceBooking.cs" Line="33" Column="2" />
+      <File FileName="Migrations/20260604115113_InitialCreate.cs" Line="20" Column="18" />
+      <File FileName="Migrations/AppDbContextModelSnapshot.cs" Line="927" Column="1" />
+      <File FileName="Migrations/20260604115113_InitialCreate.Designer.cs" Line="23" Column="43" />
+      <File FileName="appsettings.json" Line="19" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="sabmero">
-            <Node name="sabmero" selected="True" />
+            <Node name="sabmero" selected="True">
+              <Node name="Controllers" expanded="True" />
+              <Node name="Data" expanded="True" />
+              <Node name="DTOs" expanded="True">
+                <Node name="Service" expanded="True" />
+              </Node>
+              <Node name="Migrations" expanded="True" />
+              <Node name="Models" expanded="True" />
+              <Node name="Properties" expanded="True" />
+              <Node name="Services" expanded="True" />
+            </Node>
           </Node>
         </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
-  </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MultiItemStartupConfigurations />
 </Properties>
