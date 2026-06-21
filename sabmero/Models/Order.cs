@@ -12,7 +12,8 @@ public class Order
     public decimal TotalAmount { get; set; }
     public decimal CommissionAmount { get; set; }
     public string PaymentMethod { get; set; } = "COD";      // "COD" | "QR"
-    public string PaymentStatus { get; set; } = "Pending";  // "Pending" | "Paid"
+    public string PaymentStatus { get; set; } = "Pending";  // "Pending" | "Submitted" | "Verified" | "Rejected" | "Paid"
+    public string? PaymentScreenshotPath { get; set; }      // QR payment proof uploaded by the customer
     public string Status { get; set; } = "Pending";         // "Pending" | "Processing" | "Dispatched" | "Delivered" | "Cancelled"
     public string DeliveryAddress { get; set; } = string.Empty;
     public string? PromoCode { get; set; }

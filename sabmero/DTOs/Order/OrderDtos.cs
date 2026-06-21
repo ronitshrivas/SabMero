@@ -61,6 +61,7 @@ public class OrderDto
     public decimal CommissionAmount { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
     public string PaymentStatus { get; set; } = string.Empty;
+    public string? PaymentScreenshotPath { get; set; }
     public string Status { get; set; } = string.Empty;
     public string DeliveryAddress { get; set; } = string.Empty;
     public string? PromoCode { get; set; }

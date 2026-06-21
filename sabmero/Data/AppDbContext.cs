@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<PromoCode> PromoCodes { get; set; }
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<AppSetting> AppSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -112,6 +113,7 @@ public class AppDbContext : DbContext
             e.Property(o => o.Discount).HasPrecision(18, 2);
             e.Property(o => o.PaymentMethod).HasMaxLength(10).HasDefaultValue("COD");
             e.Property(o => o.PaymentStatus).HasMaxLength(15).HasDefaultValue("Pending");
+            e.Property(o => o.PaymentScreenshotPath).HasMaxLength(400);
             e.Property(o => o.Status).HasMaxLength(20).HasDefaultValue("Pending");
             e.Property(o => o.DeliveryAddress).HasMaxLength(400).IsRequired();
             e.Property(o => o.PromoCode).HasMaxLength(50);
@@ -155,7 +157,17 @@ public class AppDbContext : DbContext
             e.Property(sb => sb.Status).HasMaxLength(20).HasDefaultValue("Pending");
             e.Property(sb => sb.PaymentMethod).HasMaxLength(10).HasDefaultValue("Cash");
             e.Property(sb => sb.PaymentScreenshotPath).HasMaxLength(400);
+            e.Property(sb => sb.PaymentStatus).HasMaxLength(15).HasDefaultValue("Pending");
             e.Property(sb => sb.ServiceCharge).HasPrecision(18, 2);
+        });
+
+        // ── APP SETTINGS (key-value store, e.g. the admin payment QR) ──────
+        modelBuilder.Entity<AppSetting>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.HasIndex(s => s.Key).IsUnique();
+            e.Property(s => s.Key).HasMaxLength(100).IsRequired();
+            e.Property(s => s.Value).HasMaxLength(600);
         });
 
         // ── PROMO CODES ────────────────────────────────────────────────────
@@ -311,6 +323,7 @@ public class AppDbContext : DbContext
                 Status = "Pending",
                 PaymentMethod = "QR",
                 PaymentScreenshotPath = "/uploads/payment/mock-qr-payment-1.jpg",
+                PaymentStatus = "Submitted",
                 CreatedAt = seedDate
             },
             new ServiceBooking
@@ -344,8 +357,20 @@ public class AppDbContext : DbContext
                 CompletedTime = new DateTime(2026, 6, 15, 9, 30, 0, DateTimeKind.Utc),
                 PaymentMethod = "QR",
                 PaymentScreenshotPath = "/uploads/payment/mock-qr-payment-2.jpg",
+                PaymentStatus = "Verified",
                 ServiceCharge = 1500m,
                 CreatedAt = seedDate
+            }
+        );
+
+        // ── Admin payment QR (mock) ──────────────────────────────────────────
+        modelBuilder.Entity<AppSetting>().HasData(
+            new AppSetting
+            {
+                Id = 1,
+                Key = "PaymentQrImagePath",
+                Value = "/uploads/payment/admin-qr.png",
+                UpdatedAt = seedDate
             }
         );
     }

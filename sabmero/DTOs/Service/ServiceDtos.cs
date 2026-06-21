@@ -54,6 +54,7 @@ public class BookingDto
     public DateTime? CompletedTime { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
     public string? PaymentScreenshotPath { get; set; }
+    public string PaymentStatus { get; set; } = string.Empty;
     public decimal? ServiceCharge { get; set; }
     public DateTime CreatedAt { get; set; }
 }

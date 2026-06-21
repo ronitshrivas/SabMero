@@ -177,6 +177,15 @@ public class OrderService : IOrderService
         if (order == null)
             return (false, "Order not found.");
 
+        // A QR order can't move forward until the admin/vendor has verified the
+        // payment screenshot. Cancelling is still allowed.
+        if (order.PaymentMethod == "QR"
+            && order.PaymentStatus != "Verified" && order.PaymentStatus != "Paid"
+            && status != "Cancelled" && status != "Pending")
+        {
+            return (false, "Payment is not verified yet. This order can't be processed until the payment screenshot is approved.");
+        }
+
         // If cancelling, return the stock back to products.
         if (status == "Cancelled" && order.Status != "Cancelled")
         {
@@ -204,6 +213,13 @@ public class OrderService : IOrderService
         var rider = await _db.Users.FindAsync(riderId);
         if (rider == null || rider.Role != "Rider")
             return (false, "That user is not a rider.");
+
+        // Don't dispatch a QR order whose payment hasn't been verified yet.
+        if (order.PaymentMethod == "QR"
+            && order.PaymentStatus != "Verified" && order.PaymentStatus != "Paid")
+        {
+            return (false, "Payment is not verified yet. Verify the payment before assigning a rider.");
+        }
 
         order.RiderId = riderId;
         if (order.Status == "Pending" || order.Status == "Processing")
@@ -298,6 +314,7 @@ public class OrderService : IOrderService
             CommissionAmount = order.CommissionAmount,
             PaymentMethod = order.PaymentMethod,
             PaymentStatus = order.PaymentStatus,
+            PaymentScreenshotPath = order.PaymentScreenshotPath,
             Status = order.Status,
             DeliveryAddress = order.DeliveryAddress,
             PromoCode = order.PromoCode,

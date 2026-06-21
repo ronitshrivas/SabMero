@@ -31,10 +31,12 @@ public class ServiceBookingService : IServiceBookingService
         // Normalize the payment method up front.
         var paymentMethod = dto.PaymentMethod == "QR" ? "QR" : "Cash";
 
-        // Cash → proceed normally. QR → the customer must upload a payment
-        // screenshot before the booking can be completed.
-        if (paymentMethod == "QR" && string.IsNullOrWhiteSpace(dto.PaymentScreenshotPath))
-            return (false, "Please upload a screenshot of your QR payment to complete the booking.", null);
+        // Cash → no payment step. QR → the customer pays the admin's QR and
+        // submits a screenshot afterwards via POST /api/payments/submit, which
+        // the admin then verifies. If a screenshot is already provided at
+        // creation we accept it and mark the payment as Submitted right away.
+        var hasShot = paymentMethod == "QR" && !string.IsNullOrWhiteSpace(dto.PaymentScreenshotPath);
+        var paymentStatus = (paymentMethod == "QR" && hasShot) ? "Submitted" : "Pending";
 
         var booking = new ServiceBooking
         {
@@ -49,6 +51,7 @@ public class ServiceBookingService : IServiceBookingService
             Status = "Pending",
             PaymentMethod = paymentMethod,
             PaymentScreenshotPath = paymentMethod == "QR" ? dto.PaymentScreenshotPath : null,
+            PaymentStatus = paymentStatus,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -122,6 +125,10 @@ public class ServiceBookingService : IServiceBookingService
         if (tech == null || tech.Role != "Technician")
             return (false, "That user is not a technician.");
 
+        // A QR booking can't be approved/assigned until its payment is verified.
+        if (booking.PaymentMethod == "QR" && booking.PaymentStatus != "Verified")
+            return (false, "Payment is not verified yet. Verify the payment screenshot before assigning a technician.");
+
         booking.TechnicianId = technicianId;
         // Assigning a technician approves the booking and reveals the
         // technician's details to the customer.
@@ -150,6 +157,10 @@ public class ServiceBookingService : IServiceBookingService
         // because approval is what surfaces the technician's details.
         if (dto.Status == "Approved" && booking.TechnicianId == null)
             return (false, "Assign a technician before approving this booking.");
+
+        // A QR booking can't be approved until its payment is verified.
+        if (dto.Status == "Approved" && booking.PaymentMethod == "QR" && booking.PaymentStatus != "Verified")
+            return (false, "Payment is not verified yet. Verify the payment screenshot before approving this booking.");
 
         booking.Status = dto.Status;
 
@@ -235,6 +246,7 @@ public class ServiceBookingService : IServiceBookingService
             CompletedTime = b.CompletedTime,
             PaymentMethod = b.PaymentMethod,
             PaymentScreenshotPath = b.PaymentScreenshotPath,
+            PaymentStatus = b.PaymentStatus,
             ServiceCharge = b.ServiceCharge,
             CreatedAt = b.CreatedAt
         };

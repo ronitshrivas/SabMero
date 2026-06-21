@@ -24,6 +24,7 @@ public class ServiceBooking
     public DateTime? CompletedTime { get; set; }             // technician taps "Complete"
     public string PaymentMethod { get; set; } = "Cash";      // "Cash" | "QR"
     public string? PaymentScreenshotPath { get; set; }       // QR payment proof — required when PaymentMethod == "QR"
+    public string PaymentStatus { get; set; } = "Pending";   // "Pending" | "Submitted" | "Verified" | "Rejected"
     public decimal? ServiceCharge { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

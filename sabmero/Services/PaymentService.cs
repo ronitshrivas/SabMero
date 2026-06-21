@@ -1,19 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using sabmero.Data;
 using sabmero.DTOs.Payment;
+using sabmero.Models;
 
 namespace sabmero.Services;
 
-// Handles QR / online payments.
+// Manual QR payment flow (no third-party gateway).
 //
-// IMPORTANT — this is a SAFE PLACEHOLDER, not a live payment integration.
-// It generates a reference and a QR payload string your app can render as a QR code,
-// then lets the order be marked "Paid" once confirmed. To go live in Nepal you would
-// plug a real provider (FonePay / eSewa / Khalti) into InitiateAsync (build their QR
-// payload) and ConfirmAsync (verify via their webhook/verification API) — the rest of
-// the app already works against this interface and won't need to change.
+// The admin uploads ONE global QR image. Customers scan it, pay externally,
+// and upload a screenshot as proof. Admin (any) or Vendor (own orders) then
+// verify the proof. A QR order/booking is blocked from progressing until its
+// payment is Verified.
+//
+// PaymentStatus values:  Pending → Submitted → Verified | Rejected
 public class PaymentService : IPaymentService
 {
+    // Well-known AppSetting key holding the admin's QR image path.
+    private const string QrKey = "PaymentQrImagePath";
+
     private readonly AppDbContext _db;
     private readonly ILogger<PaymentService> _logger;
 
@@ -23,57 +27,203 @@ public class PaymentService : IPaymentService
         _logger = logger;
     }
 
-    public async Task<(bool Success, string Message, PaymentInfoDto? Data)> InitiateAsync(int userId, InitiatePaymentDto dto)
+    // ── Admin sets the global QR image ───────────────────────────────────────
+    public async Task<(bool Success, string Message)> SetQrAsync(string qrImagePath)
     {
-        var order = await _db.Orders.FindAsync(dto.OrderId);
-        if (order == null)
-            return (false, "Order not found.", null);
-        if (order.UserId != userId)
-            return (false, "You can only pay for your own orders.", null);
-        if (order.PaymentStatus == "Paid")
-            return (false, "This order is already paid.", null);
+        if (string.IsNullOrWhiteSpace(qrImagePath))
+            return (false, "QR image path is required.");
 
-        // A unique reference the customer (and your records) can track this payment by.
-        var reference = $"SAB-{order.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}";
-
-        // Placeholder QR payload. Replace with the real PSP-generated payload when integrating.
-        var qrPayload = $"sabmero://pay?ref={reference}&amount={order.TotalAmount}&currency=NPR";
-
-        _logger.LogInformation("Payment initiated for order {OrderId}, ref {Reference}", order.Id, reference);
-
-        return (true, "Scan the QR to pay.", new PaymentInfoDto
+        var setting = await _db.AppSettings.FirstOrDefaultAsync(s => s.Key == QrKey);
+        if (setting == null)
         {
-            OrderId = order.Id,
-            Amount = order.TotalAmount,
-            Currency = "NPR",
-            QrPayload = qrPayload,
-            Reference = reference,
-            Instructions = "Open your mobile wallet, scan the QR, and confirm the payment."
-        });
-    }
-
-    public async Task<(bool Success, string Message)> ConfirmAsync(int userId, string role, ConfirmPaymentDto dto)
-    {
-        var order = await _db.Orders.FindAsync(dto.OrderId);
-        if (order == null)
-            return (false, "Order not found.");
-
-        // Customers can only confirm their own orders; Admin can confirm any.
-        if (role == "Customer" && order.UserId != userId)
-            return (false, "You can only confirm payment for your own orders.");
-
-        if (order.PaymentStatus == "Paid")
-            return (true, "Payment already confirmed.");
-
-        // ── In PRODUCTION: verify dto.Reference against the PSP's verification API here ──
-        // For now we trust the confirmation and mark the order paid.
-        order.PaymentStatus = "Paid";
-        if (order.PaymentMethod == "COD")
-            order.PaymentMethod = "QR";   // they chose to pay online instead of cash
+            setting = new AppSetting { Key = QrKey, Value = qrImagePath, UpdatedAt = DateTime.UtcNow };
+            _db.AppSettings.Add(setting);
+        }
+        else
+        {
+            setting.Value = qrImagePath;
+            setting.UpdatedAt = DateTime.UtcNow;
+        }
 
         await _db.SaveChangesAsync();
-        _logger.LogInformation("Payment confirmed for order {OrderId}, ref {Reference}", dto.OrderId, dto.Reference);
+        _logger.LogInformation("Admin updated payment QR image to {Path}", qrImagePath);
+        return (true, "Payment QR updated.");
+    }
 
-        return (true, "Payment confirmed.");
+    // ── Any user fetches the QR to pay ───────────────────────────────────────
+    public async Task<QrInfoDto> GetQrAsync()
+    {
+        var setting = await _db.AppSettings.FirstOrDefaultAsync(s => s.Key == QrKey);
+        return new QrInfoDto { QrImagePath = setting?.Value };
+    }
+
+    // ── Customer submits a payment screenshot ────────────────────────────────
+    public async Task<(bool Success, string Message)> SubmitAsync(int userId, SubmitPaymentDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.ScreenshotPath))
+            return (false, "Please upload a payment screenshot first.");
+
+        var type = NormalizeType(dto.Type);
+        if (type == null)
+            return (false, "Type must be 'Order' or 'Booking'.");
+
+        if (type == "Order")
+        {
+            var order = await _db.Orders.FindAsync(dto.Id);
+            if (order == null) return (false, "Order not found.");
+            if (order.UserId != userId) return (false, "You can only pay for your own orders.");
+            if (order.PaymentStatus == "Verified" || order.PaymentStatus == "Paid")
+                return (false, "This order is already paid.");
+
+            order.PaymentMethod = "QR";
+            order.PaymentScreenshotPath = dto.ScreenshotPath;
+            order.PaymentStatus = "Submitted";
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Payment screenshot submitted for order {Id} by user {UserId}", dto.Id, userId);
+            return (true, "Payment screenshot submitted. Awaiting verification.");
+        }
+        else // Booking
+        {
+            var booking = await _db.ServiceBookings.FindAsync(dto.Id);
+            if (booking == null) return (false, "Booking not found.");
+            if (booking.UserId != userId) return (false, "You can only pay for your own bookings.");
+            if (booking.PaymentStatus == "Verified")
+                return (false, "This booking is already paid.");
+
+            booking.PaymentMethod = "QR";
+            booking.PaymentScreenshotPath = dto.ScreenshotPath;
+            booking.PaymentStatus = "Submitted";
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Payment screenshot submitted for booking {Id} by user {UserId}", dto.Id, userId);
+            return (true, "Payment screenshot submitted. Awaiting verification.");
+        }
+    }
+
+    // ── Admin/Vendor verify a submitted payment ──────────────────────────────
+    public async Task<(bool Success, string Message)> VerifyAsync(int userId, string role, VerifyPaymentDto dto)
+    {
+        var type = NormalizeType(dto.Type);
+        if (type == null)
+            return (false, "Type must be 'Order' or 'Booking'.");
+
+        if (type == "Order")
+        {
+            var order = await _db.Orders
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.Id == dto.Id);
+            if (order == null) return (false, "Order not found.");
+
+            // Vendors may only verify orders that contain one of their products.
+            if (role == "Vendor" && !await VendorOwnsOrderAsync(userId, order))
+                return (false, "This order doesn't contain any of your products.");
+
+            if (order.PaymentStatus != "Submitted")
+                return (false, "This payment is not awaiting verification.");
+
+            order.PaymentStatus = dto.Approve ? "Verified" : "Rejected";
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Order {Id} payment {Result} by user {UserId}",
+                dto.Id, order.PaymentStatus, userId);
+            return (true, dto.Approve ? "Payment verified." : "Payment rejected.");
+        }
+        else // Booking
+        {
+            // Only Admin verifies service-booking payments (vendors don't own bookings).
+            if (role == "Vendor")
+                return (false, "Vendors can't verify service-booking payments.");
+
+            var booking = await _db.ServiceBookings.FindAsync(dto.Id);
+            if (booking == null) return (false, "Booking not found.");
+            if (booking.PaymentStatus != "Submitted")
+                return (false, "This payment is not awaiting verification.");
+
+            booking.PaymentStatus = dto.Approve ? "Verified" : "Rejected";
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("Booking {Id} payment {Result} by user {UserId}",
+                dto.Id, booking.PaymentStatus, userId);
+            return (true, dto.Approve ? "Payment verified." : "Payment rejected.");
+        }
+    }
+
+    // ── Admin/Vendor list payments awaiting verification ─────────────────────
+    public async Task<List<PendingPaymentDto>> GetPendingAsync(int userId, string role)
+    {
+        var result = new List<PendingPaymentDto>();
+
+        // Orders with a submitted payment.
+        var orderQuery = _db.Orders
+            .Include(o => o.User)
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+            .Where(o => o.PaymentStatus == "Submitted");
+
+        // Vendors only see orders containing their products.
+        if (role == "Vendor")
+        {
+            var vendor = await _db.Vendors.FirstOrDefaultAsync(v => v.UserId == userId);
+            if (vendor != null)
+                orderQuery = orderQuery.Where(o => o.OrderItems.Any(oi => oi.Product.VendorId == vendor.Id));
+            else
+                orderQuery = orderQuery.Where(o => false);
+        }
+
+        var orders = await orderQuery.OrderByDescending(o => o.CreatedAt).ToListAsync();
+        foreach (var o in orders)
+        {
+            result.Add(new PendingPaymentDto
+            {
+                Type = "Order",
+                Id = o.Id,
+                CustomerName = o.User.FullName,
+                CustomerPhone = o.User.Phone,
+                Amount = o.TotalAmount,
+                PaymentStatus = o.PaymentStatus,
+                ScreenshotPath = o.PaymentScreenshotPath,
+                CreatedAt = o.CreatedAt
+            });
+        }
+
+        // Bookings with a submitted payment (Admin only — vendors don't own bookings).
+        if (role != "Vendor")
+        {
+            var bookings = await _db.ServiceBookings
+                .Include(b => b.User)
+                .Where(b => b.PaymentStatus == "Submitted")
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            foreach (var b in bookings)
+            {
+                result.Add(new PendingPaymentDto
+                {
+                    Type = "Booking",
+                    Id = b.Id,
+                    CustomerName = b.User.FullName,
+                    CustomerPhone = b.User.Phone,
+                    Amount = b.ServiceCharge ?? 0m,
+                    PaymentStatus = b.PaymentStatus,
+                    ScreenshotPath = b.PaymentScreenshotPath,
+                    CreatedAt = b.CreatedAt
+                });
+            }
+        }
+
+        return result;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    private static string? NormalizeType(string? type)
+    {
+        if (string.IsNullOrWhiteSpace(type)) return null;
+        var t = type.Trim().ToLowerInvariant();
+        if (t == "order") return "Order";
+        if (t == "booking") return "Booking";
+        return null;
+    }
+
+    private async Task<bool> VendorOwnsOrderAsync(int userId, Order order)
+    {
+        var vendor = await _db.Vendors.FirstOrDefaultAsync(v => v.UserId == userId);
+        if (vendor == null) return false;
+        return order.OrderItems.Any(oi => oi.Product.VendorId == vendor.Id);
     }
 }
