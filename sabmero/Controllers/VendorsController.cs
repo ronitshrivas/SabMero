@@ -7,11 +7,12 @@ using sabmero.Services;
 namespace sabmero.Controllers;
 
 // ── VENDOR ENDPOINTS ──────────────────────────────────────────────────────────
-//  POST   /api/vendors/apply        → apply to become a vendor            (any logged-in user)
-//  GET    /api/vendors/me           → my vendor profile                   (Vendor)
-//  GET    /api/vendors/{id}         → public vendor profile               (public)
+//  POST   /api/vendors/apply            → apply to become a vendor   (any logged-in user)
+//  GET    /api/vendors/request-status   → my vendor request status   (any logged-in user)
+//  GET    /api/vendors/me               → my vendor profile          (Vendor)
+//  GET    /api/vendors/{id}             → public vendor profile       (public)
 //
-// (Admin approval lives under /api/admin/vendors — see AdminController.)
+// (Admin review lives under /api/admin/vendor-requests — see AdminController.)
 // ─────────────────────────────────────────────────────────────────────────────
 
 [ApiController]
@@ -34,6 +35,18 @@ public class VendorsController : ControllerBase
         return success
             ? Ok(new { success = true, message, data })
             : BadRequest(new { success = false, message });
+    }
+
+    // The applicant checks whether their request is Pending / Approved / Rejected.
+    // When Rejected, the response includes the rejection reason.
+    [Authorize]
+    [HttpGet("request-status")]
+    public async Task<IActionResult> RequestStatus()
+    {
+        var data = await _service.GetMyRequestAsync(User.GetUserId());
+        if (data == null)
+            return NotFound(new { success = false, message = "You have not applied to become a vendor." });
+        return Ok(new { success = true, data });
     }
 
     [Authorize(Roles = "Vendor,Admin")]

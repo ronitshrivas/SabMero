@@ -36,6 +36,9 @@ public class AdminUserDto
     public string? Email { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsKycVerified { get; set; }
+    public string KycStatus { get; set; } = "NotSubmitted";
+    public string? KycRejectionReason { get; set; }
+    public string? KycDocumentPath { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -63,11 +66,32 @@ public class CreateStaffDto
     public string Address { get; set; } = string.Empty;
 }
 
-// ── Admin SENDS this to set a vendor's approval / commission ──
+// ── Admin SENDS this to approve/reject a VENDOR REQUEST ──
+// Approved = true  → creates the Vendor profile, upgrades the user to Vendor.
+// Approved = false → rejects; RejectionReason is required and returned to user.
+public class ReviewVendorRequestDto
+{
+    public bool Approved { get; set; } = true;
+    public decimal? CommissionRate { get; set; }   // optional override (e.g. 12.5) on approval
+    public string? RejectionReason { get; set; }    // required when Approved == false
+}
+
+// ── (Legacy) Admin SENDS this to set a vendor's approval / commission ──
+// Kept for backward compatibility with the existing /vendors/{id}/approval route
+// that acts directly on a Vendor profile.
 public class ApproveVendorDto
 {
     public bool Approved { get; set; } = true;
-    public decimal? CommissionRate { get; set; }   // optional override (e.g. 12.5)
+    public decimal? CommissionRate { get; set; }
+}
+
+// ── Admin SENDS this to review a user's KYC ──
+// Verified = true  → KycStatus = "Approved", IsKycVerified = true
+// Verified = false → KycStatus = "Rejected", RejectionReason required & returned
+public class ReviewKycDto
+{
+    public bool Verified { get; set; }
+    public string? RejectionReason { get; set; }    // required when Verified == false
 }
 
 // ── Admin SENDS this to toggle a user's active state ──

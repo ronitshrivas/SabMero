@@ -11,6 +11,7 @@ namespace sabmero.Services;
 //  3. Applies a promo code if valid
 //  4. Calculates platform commission from each vendor's rate
 //  5. Deducts stock and saves everything in one transaction
+//  6. Optionally creates a linked Installation booking (Repair section)
 public class OrderService : IOrderService
 {
     private readonly AppDbContext _db;
@@ -27,6 +28,17 @@ public class OrderService : IOrderService
         if (dto.Items == null || dto.Items.Count == 0)
             return (false, "Your cart is empty.", null);
 
+        // If installation is requested, validate its details up front.
+        if (dto.BookInstallation)
+        {
+            if (dto.Installation == null)
+                return (false, "Installation details are required when booking installation.", null);
+            if (string.IsNullOrWhiteSpace(dto.Installation.TimeSlot))
+                return (false, "Installation time slot is required.", null);
+            if (dto.Installation.BookingDate.Date < DateTime.UtcNow.Date)
+                return (false, "Installation date cannot be in the past.", null);
+        }
+
         // Load all referenced products in one query
         var productIds = dto.Items.Select(i => i.ProductId).Distinct().ToList();
         var products = await _db.Products
@@ -34,7 +46,7 @@ public class OrderService : IOrderService
             .Where(p => productIds.Contains(p.Id))
             .ToListAsync();
 
-        // Use a DB transaction so stock + order are saved atomically.
+        // Use a DB transaction so stock + order (+ installation) are saved atomically.
         await using var tx = await _db.Database.BeginTransactionAsync();
 
         decimal subTotal = 0m;
@@ -46,7 +58,7 @@ public class OrderService : IOrderService
             var product = products.FirstOrDefault(p => p.Id == item.ProductId);
             if (product == null)
                 return (false, $"Product #{item.ProductId} no longer exists.", null);
-            if (!product.IsActive || !product.Vendor.IsApproved)
+            if (!product.IsActive || product.Vendor == null || !product.Vendor.IsApproved)
                 return (false, $"'{product.Name}' is not available.", null);
             if (item.Quantity < 1)
                 return (false, $"Invalid quantity for '{product.Name}'.", null);
@@ -110,12 +122,45 @@ public class OrderService : IOrderService
 
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
+
+        // ── Optional installation booking (lands in the Repair section) ──
+        // Vendors sell the product; the on-site installation is our technical
+        // work, so it is created as a ServiceBooking linked to this order.
+        int? installationBookingId = null;
+        if (dto.BookInstallation && dto.Installation != null)
+        {
+            var inst = dto.Installation;
+            var booking = new ServiceBooking
+            {
+                UserId = userId,
+                ServiceType = "Installation",
+                BookingDate = DateTime.SpecifyKind(inst.BookingDate, DateTimeKind.Utc),
+                TimeSlot = inst.TimeSlot.Trim(),
+                Latitude = inst.Latitude,
+                Longitude = inst.Longitude,
+                ServiceAddress = string.IsNullOrWhiteSpace(inst.ServiceAddress)
+                    ? order.DeliveryAddress
+                    : inst.ServiceAddress!.Trim(),
+                Status = "Pending",
+                PaymentMethod = "Cash",     // installation charge settled on-site by default
+                PaymentStatus = "Pending",
+                RelatedOrderId = order.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.ServiceBookings.Add(booking);
+            await _db.SaveChangesAsync();
+            installationBookingId = booking.Id;
+            _logger.LogInformation("Installation booking {BId} created for order {OId}", booking.Id, order.Id);
+        }
+
         await tx.CommitAsync();
 
         _logger.LogInformation("Order {Id} placed by user {UserId}, total {Total}", order.Id, userId, total);
 
         var dtoResult = await BuildOrderDtoAsync(order.Id);
-        return (true, "Order placed successfully.", dtoResult);
+        return (true, dto.BookInstallation
+            ? "Order placed and installation booked successfully."
+            : "Order placed successfully.", dtoResult);
     }
 
     public async Task<List<OrderDto>> GetMyOrdersAsync(int userId)
@@ -286,12 +331,18 @@ public class OrderService : IOrderService
         if (order.RiderId.HasValue)
             riderName = (await _db.Users.FindAsync(order.RiderId.Value))?.FullName;
 
+        // Linked installation booking, if any.
+        var installationBookingId = await _db.ServiceBookings
+            .Where(b => b.RelatedOrderId == order.Id)
+            .Select(b => (int?)b.Id)
+            .FirstOrDefaultAsync();
+
         var items = order.OrderItems.Select(oi => new OrderItemDto
         {
             Id = oi.Id,
             ProductId = oi.ProductId,
-            ProductName = oi.Product.Name,
-            ProductImage = oi.Product.ImagePath,
+            ProductName = oi.Product != null ? oi.Product.Name : "(removed product)",
+            ProductImage = oi.Product != null ? oi.Product.ImagePath : null,
             Quantity = oi.Quantity,
             UnitPrice = oi.UnitPrice,
             LineTotal = oi.UnitPrice * oi.Quantity,
@@ -305,7 +356,7 @@ public class OrderService : IOrderService
         {
             Id = order.Id,
             UserId = order.UserId,
-            CustomerName = order.User.FullName,
+            CustomerName = order.User != null ? order.User.FullName : string.Empty,
             RiderId = order.RiderId,
             RiderName = riderName,
             SubTotal = subTotal,
@@ -319,7 +370,8 @@ public class OrderService : IOrderService
             DeliveryAddress = order.DeliveryAddress,
             PromoCode = order.PromoCode,
             CreatedAt = order.CreatedAt,
-            Items = items
+            Items = items,
+            InstallationBookingId = installationBookingId
         };
     }
 }

@@ -26,7 +26,7 @@ if (!string.IsNullOrEmpty(databaseUrl))
     // We convert it to the format Npgsql (the PostgreSQL driver) expects.
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]}";
 }
 else
 {
@@ -194,7 +194,7 @@ app.UseCors("AllowAll");
 Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
 app.UseStaticFiles();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();    // ← must be BEFORE UseAuthorization
 app.UseAuthorization();
 app.MapControllers();

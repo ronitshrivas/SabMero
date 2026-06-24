@@ -9,5 +9,7 @@ public interface IAdminService
     Task<List<AdminUserDto>> GetUsersAsync(string? role, string? search);
     Task<(bool Success, string Message, AdminUserDto? Data)> CreateStaffAsync(CreateStaffDto dto);
     Task<(bool Success, string Message)> SetUserActiveAsync(int userId, bool isActive);
-    Task<(bool Success, string Message)> VerifyKycAsync(int userId, bool verified);
+
+    // Approve/reject KYC. rejectionReason is required when verified == false.
+    Task<(bool Success, string Message)> ReviewKycAsync(int userId, bool verified, string? rejectionReason);
 }

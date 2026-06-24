@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    container_name: sabmero-db
+    restart: always
+    environment:
+      POSTGRES_USER: sabmero
+      POSTGRES_PASSWORD: ChangeThisStrongDbPass2026
+      POSTGRES_DB: SabmeroDb
+    volumes:
+      - sabmero_pgdata:/var/lib/postgresql/data
+    networks:
+      - sabmero_net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sabmero-api
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://sabmero:ChangeThisStrongDbPass2026@db:5432/SabmeroDb"
+      JWT_SECRET: "7f6f81e89b2b4d1ba28cfae4f2026ae892b15e45c7d8f9a2b3c4d5e6f7a8b9c0"
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "8080:8080"
+    networks:
+      - sabmero_net
+
+networks:
+  sabmero_net:
+
+volumes:
+  sabmero_pgdata:

@@ -3,7 +3,7 @@
 namespace sabmero.Models;
 
 // A customer's booking for an on-site repair technician.
-// ServiceType: "Electrical" | "CCTV" | "Tech"
+// ServiceType: "Electrical" | "CCTV" | "Tech" | "Installation"
 // Status flow:  Pending → Approved → Processing → OnTheWay → Completed
 //   Pending  : just created, under admin review (no technician yet)
 //   Approved : admin assigned a technician → customer can now see tech details
@@ -12,7 +12,7 @@ public class ServiceBooking
     public int Id { get; set; }
     public int UserId { get; set; }             // FK → Users (the customer)
     public int? TechnicianId { get; set; }      // FK → Users (assigned later by admin)
-    public string ServiceType { get; set; } = string.Empty;  // "Electrical" | "CCTV" | "Tech"
+    public string ServiceType { get; set; } = string.Empty;  // "Electrical" | "CCTV" | "Tech" | "Installation"
     public DateTime BookingDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;     // e.g. "10:00 AM - 12:00 PM"
     public double Latitude { get; set; }        // from Google Maps
@@ -28,7 +28,15 @@ public class ServiceBooking
     public decimal? ServiceCharge { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    // ── Installation linkage ─────────────────────────────────────────────────
+    // When a customer buys a product (e.g. AC, CCTV, TV) and also books its
+    // installation at checkout, the order spawns an Installation booking that
+    // lands in the Repair section. RelatedOrderId ties this booking back to the
+    // order that created it. Null for ordinary standalone repair bookings.
+    public int? RelatedOrderId { get; set; }
+
     // Navigation
     public User User { get; set; } = null!;
+    public Order? RelatedOrder { get; set; }
     public Review? Review { get; set; }
 }

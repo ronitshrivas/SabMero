@@ -2,19 +2,18 @@
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.ItemProperties.sabmero PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Models/VendorRequest.cs">
     <Files>
-      <File FileName="Program.cs" Line="210" Column="11" />
+      <File FileName="Program.cs" Line="23" Column="76" />
       <File FileName="Helpers/ClaimsHelper.cs" />
       <File FileName="DTOs/Common/ApiResponse.cs" />
       <File FileName="DTOs/Category/CategoryDtos.cs" />
       <File FileName="DTOs/Product/ProductDtos.cs" />
-      <File FileName="DTOs/Vendor/VendorDtos.cs" />
-      <File FileName="DTOs/Order/OrderDtos.cs" />
+      <File FileName="DTOs/Vendor/VendorDtos.cs" Line="56" Column="1" />
+      <File FileName="DTOs/Order/OrderDtos.cs" Line="116" Column="1" />
       <File FileName="DTOs/Service/ServiceDtos.cs" />
-      <File FileName="DTOs/Admin/AdminDtos.cs" />
+      <File FileName="DTOs/Admin/AdminDtos.cs" Line="102" Column="1" />
       <File FileName="DTOs/Promo/PromoDtos.cs" />
       <File FileName="DTOs/Return/ReturnDtos.cs" />
       <File FileName="DTOs/Review/ReviewDtos.cs" />
@@ -45,10 +44,10 @@
       <File FileName="Services/FileService.cs" />
       <File FileName="Controllers/CategoriesController.cs" />
       <File FileName="Controllers/ProductsController.cs" />
-      <File FileName="Controllers/VendorsController.cs" />
+      <File FileName="Controllers/VendorsController.cs" Line="46" Column="40" />
       <File FileName="Controllers/OrdersController.cs" />
       <File FileName="Controllers/BookingsController.cs" />
-      <File FileName="Controllers/AdminController.cs" />
+      <File FileName="Controllers/AdminController.cs" Line="152" Column="1" />
       <File FileName="Controllers/PromosController.cs" />
       <File FileName="Controllers/ReturnsController.cs" />
       <File FileName="Controllers/ReviewsController.cs" />
@@ -56,23 +55,40 @@
       <File FileName="Controllers/UploadsController.cs" />
       <File FileName="Controllers/HealthController.cs" />
       <File FileName="Services/JwtService.cs" />
-      <File FileName="Data/AppDbContext.cs" />
-      <File FileName="Models/ServiceBooking.cs" />
+      <File FileName="Data/AppDbContext.cs" Line="409" Column="2" />
+      <File FileName="Models/ServiceBooking.cs" Line="43" Column="1" />
       <File FileName="Migrations/20260604115113_InitialCreate.cs" />
       <File FileName="Migrations/AppDbContextModelSnapshot.cs" />
       <File FileName="Migrations/20260604115113_InitialCreate.Designer.cs" />
-      <File FileName="appsettings.json" Line="19" Column="1" />
+      <File FileName="appsettings.json" />
+      <File FileName="appsettings.Development.json" />
+      <File FileName="Models/Order.cs" />
+      <File FileName="Properties/launchSettings.json" />
+      <File FileName="Models/AppSetting.cs" />
+      <File FileName="DTOs/Auth/LoginDto.cs" />
+      <File FileName="DTOs/Auth/AuthResponseDto.cs" />
+      <File FileName="DTOs/Auth/KycDtos.cs" Line="23" Column="1" />
+      <File FileName="Controllers/AuthController.cs" />
+      <File FileName="DTOs/Auth/OtpDto.cs" />
+      <File FileName="DTOs/Auth/RegisterDto.cs" />
+      <File FileName="Models/Vendor.cs" />
+      <File FileName="Controllers/KycController.cs" Line="49" Column="1" />
+      <File FileName="Models/VendorRequest.cs" Line="23" Column="80" />
+      <File FileName="Models/User.cs" Line="43" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="sabmero">
-            <Node name="sabmero" selected="True" />
+            <Node name="sabmero" selected="True">
+              <Node name="Models" expanded="True" />
+            </Node>
           </Node>
         </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.sabmero PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
   <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

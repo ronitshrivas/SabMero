@@ -15,6 +15,26 @@ public class OrderItemInputDto
     public string? SelectedColor { get; set; }
 }
 
+// ── Optional installation request sent with an order ──
+// When the customer buys an electrical item (AC, CCTV, TV, Fan, etc.) they can
+// also book installation at checkout. If BookInstallation is true, the order
+// creates a linked Installation booking that appears in the Repair section.
+public class InstallationRequestDto
+{
+    [Required(ErrorMessage = "Installation date is required")]
+    public DateTime BookingDate { get; set; }
+
+    [Required(ErrorMessage = "Time slot is required")]
+    public string TimeSlot { get; set; } = string.Empty;   // e.g. "10:00 AM - 12:00 PM"
+
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+
+    // If omitted, the order's DeliveryAddress is used for the installation.
+    [MaxLength(400)]
+    public string? ServiceAddress { get; set; }
+}
+
 // ── What Flutter SENDS to place an order (the whole cart at once) ──
 public class PlaceOrderDto
 {
@@ -31,6 +51,13 @@ public class PlaceOrderDto
     [Required]
     [MinLength(1, ErrorMessage = "Order must contain at least one item")]
     public List<OrderItemInputDto> Items { get; set; } = new();
+
+    // ── Product + Installation linkage ───────────────────────────────────────
+    // Set true to also book on-site installation for this order. When true,
+    // Installation details must be provided. The booking lands in the Repair
+    // section linked to this order (RelatedOrderId).
+    public bool BookInstallation { get; set; } = false;
+    public InstallationRequestDto? Installation { get; set; }
 }
 
 // ── One line in the API response ──
@@ -67,6 +94,9 @@ public class OrderDto
     public string? PromoCode { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<OrderItemDto> Items { get; set; } = new();
+
+    // The linked installation booking created at checkout, if any.
+    public int? InstallationBookingId { get; set; }
 }
 
 // ── Admin/rider SENDS this to change an order's status ──

@@ -17,8 +17,20 @@ public class User
     // Possible values: "Customer" | "Vendor" | "Admin" | "Technician" | "Rider"
     public string Role { get; set; } = "Customer";
 
+    // ── KYC ──────────────────────────────────────────────────────────────────
+    // KycStatus tracks where the user is in verification so the app can show a
+    // clear state to the user:
+    //   "NotSubmitted" : no document uploaded yet
+    //   "Pending"      : document submitted, waiting for admin review
+    //   "Approved"     : admin verified the document
+    //   "Rejected"     : admin rejected it → KycRejectionReason explains why
+    public string KycStatus { get; set; } = "NotSubmitted";
+    public string? KycRejectionReason { get; set; }     // set only when KycStatus == "Rejected"
+
+    // Kept for backward compatibility / quick checks. Mirrors KycStatus == "Approved".
     public bool IsKycVerified { get; set; } = false;
     public string? KycDocumentPath { get; set; }        // file path on server
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

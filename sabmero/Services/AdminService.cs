@@ -6,7 +6,8 @@ using sabmero.Models;
 namespace sabmero.Services;
 
 // Powers the Admin Panel: dashboard numbers, listing/searching users,
-// creating staff accounts (technicians & riders), and (de)activating users.
+// creating staff accounts (technicians & riders), (de)activating users,
+// and reviewing KYC (approve / reject with a reason).
 public class AdminService : IAdminService
 {
     private readonly AppDbContext _db;
@@ -31,7 +32,8 @@ public class AdminService : IAdminService
             TotalUsers = await _db.Users.CountAsync(),
             TotalCustomers = await _db.Users.CountAsync(u => u.Role == "Customer"),
             TotalVendors = await _db.Users.CountAsync(u => u.Role == "Vendor"),
-            PendingVendors = await _db.Vendors.CountAsync(v => !v.IsApproved),
+            // Pending vendors now means pending vendor REQUESTS.
+            PendingVendors = await _db.VendorRequests.CountAsync(r => r.Status == "Pending"),
             TotalTechnicians = await _db.Users.CountAsync(u => u.Role == "Technician"),
             TotalRiders = await _db.Users.CountAsync(u => u.Role == "Rider"),
 
@@ -74,6 +76,9 @@ public class AdminService : IAdminService
                 Email = u.Email,
                 Role = u.Role,
                 IsKycVerified = u.IsKycVerified,
+                KycStatus = u.KycStatus,
+                KycRejectionReason = u.KycRejectionReason,
+                KycDocumentPath = u.KycDocumentPath,
                 IsActive = u.IsActive,
                 CreatedAt = u.CreatedAt
             })
@@ -97,7 +102,8 @@ public class AdminService : IAdminService
             Address = dto.Address?.Trim() ?? string.Empty,
             Role = dto.Role,
             IsActive = true,
-            IsKycVerified = true,    // staff are vetted by admin directly
+            IsKycVerified = true,        // staff are vetted by admin directly
+            KycStatus = "Approved",
             CreatedAt = DateTime.UtcNow
         };
 
@@ -113,6 +119,9 @@ public class AdminService : IAdminService
             Email = user.Email,
             Role = user.Role,
             IsKycVerified = user.IsKycVerified,
+            KycStatus = user.KycStatus,
+            KycRejectionReason = user.KycRejectionReason,
+            KycDocumentPath = user.KycDocumentPath,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt
         });
@@ -131,14 +140,30 @@ public class AdminService : IAdminService
         return (true, isActive ? "User activated." : "User deactivated.");
     }
 
-    public async Task<(bool Success, string Message)> VerifyKycAsync(int userId, bool verified)
+    // Approve or reject a user's KYC. On rejection a reason is required and is
+    // stored so the user can see why (via GET /api/Auth/kyc-status).
+    public async Task<(bool Success, string Message)> ReviewKycAsync(int userId, bool verified, string? rejectionReason)
     {
         var user = await _db.Users.FindAsync(userId);
         if (user == null)
             return (false, "User not found.");
 
-        user.IsKycVerified = verified;
+        if (verified)
+        {
+            user.IsKycVerified = true;
+            user.KycStatus = "Approved";
+            user.KycRejectionReason = null;
+            await _db.SaveChangesAsync();
+            return (true, "KYC approved.");
+        }
+
+        if (string.IsNullOrWhiteSpace(rejectionReason))
+            return (false, "A rejection reason is required when rejecting KYC.");
+
+        user.IsKycVerified = false;
+        user.KycStatus = "Rejected";
+        user.KycRejectionReason = rejectionReason.Trim();
         await _db.SaveChangesAsync();
-        return (true, verified ? "KYC verified." : "KYC verification removed.");
+        return (true, "KYC rejected.");
     }
 }

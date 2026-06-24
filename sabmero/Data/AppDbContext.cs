@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<OtpCode> OtpCodes { get; set; }
     public DbSet<Vendor> Vendors { get; set; }
+    public DbSet<VendorRequest> VendorRequests { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Order> Orders { get; set; }
@@ -41,6 +42,8 @@ public class AppDbContext : DbContext
             e.Property(u => u.Phone).HasMaxLength(20).IsRequired();
             e.Property(u => u.Email).HasMaxLength(150);
             e.Property(u => u.Role).HasMaxLength(20).HasDefaultValue("Customer");
+            e.Property(u => u.KycStatus).HasMaxLength(15).HasDefaultValue("NotSubmitted");
+            e.Property(u => u.KycRejectionReason).HasMaxLength(400);
             e.Property(u => u.Address).HasMaxLength(300);
         });
 
@@ -66,6 +69,28 @@ public class AppDbContext : DbContext
             e.Property(v => v.BusinessName).HasMaxLength(200).IsRequired();
             e.Property(v => v.BusinessAddress).HasMaxLength(300);
             e.Property(v => v.CommissionRate).HasPrecision(5, 2);
+        });
+
+        // ── VENDOR REQUESTS ────────────────────────────────────────────────
+        modelBuilder.Entity<VendorRequest>(e =>
+        {
+            e.HasKey(r => r.Id);
+
+            e.HasOne(r => r.User)
+             .WithMany()
+             .HasForeignKey(r => r.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            // Optional link to the Vendor profile created on approval.
+            e.HasOne(r => r.Vendor)
+             .WithMany()
+             .HasForeignKey(r => r.VendorId)
+             .OnDelete(DeleteBehavior.SetNull);
+
+            e.Property(r => r.BusinessName).HasMaxLength(200).IsRequired();
+            e.Property(r => r.BusinessAddress).HasMaxLength(300);
+            e.Property(r => r.Status).HasMaxLength(15).HasDefaultValue("Pending");
+            e.Property(r => r.RejectionReason).HasMaxLength(400);
         });
 
         // ── CATEGORIES ─────────────────────────────────────────────────────
@@ -159,6 +184,12 @@ public class AppDbContext : DbContext
             e.Property(sb => sb.PaymentScreenshotPath).HasMaxLength(400);
             e.Property(sb => sb.PaymentStatus).HasMaxLength(15).HasDefaultValue("Pending");
             e.Property(sb => sb.ServiceCharge).HasPrecision(18, 2);
+
+            // Optional link to the order that spawned an installation booking.
+            e.HasOne(sb => sb.RelatedOrder)
+             .WithMany()
+             .HasForeignKey(sb => sb.RelatedOrderId)
+             .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── APP SETTINGS (key-value store, e.g. the admin payment QR) ──────
@@ -239,6 +270,7 @@ public class AppDbContext : DbContext
             Address = "Kathmandu, Nepal",
             Role = "Admin",
             IsKycVerified = true,
+            KycStatus = "Approved",
             IsActive = true,
             CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, DateTimeKind.Utc)
         });
@@ -268,11 +300,11 @@ public class AppDbContext : DbContext
 
         // ── Mock users (Id 1 is the Admin seeded above) ──────────────────────
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 2, FullName = "Ramesh Thapa", Phone = "9811111111", Email = "ramesh@example.com", PasswordHash = mockHash, Address = "Baneshwor, Kathmandu", Role = "Customer", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
-            new User { Id = 3, FullName = "Sita Gurung", Phone = "9822222222", Email = "sita@example.com", PasswordHash = mockHash, Address = "Lakeside, Pokhara", Role = "Customer", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
-            new User { Id = 4, FullName = "Bibek Shrestha", Phone = "9833333333", Email = "bibek.tech@example.com", PasswordHash = mockHash, Address = "Kalanki, Kathmandu", Role = "Technician", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
-            new User { Id = 5, FullName = "Kiran Magar", Phone = "9844444444", Email = "kiran.tech@example.com", PasswordHash = mockHash, Address = "Lalitpur, Kathmandu", Role = "Technician", IsKycVerified = true, IsActive = true, CreatedAt = seedDate },
-            new User { Id = 6, FullName = "Hari Bahadur", Phone = "9855555555", Email = "hari.vendor@example.com", PasswordHash = mockHash, Address = "New Road, Kathmandu", Role = "Vendor", IsKycVerified = true, IsActive = true, CreatedAt = seedDate }
+            new User { Id = 2, FullName = "Ramesh Thapa", Phone = "9811111111", Email = "ramesh@example.com", PasswordHash = mockHash, Address = "Baneshwor, Kathmandu", Role = "Customer", IsKycVerified = true, KycStatus = "Approved", IsActive = true, CreatedAt = seedDate },
+            new User { Id = 3, FullName = "Sita Gurung", Phone = "9822222222", Email = "sita@example.com", PasswordHash = mockHash, Address = "Lakeside, Pokhara", Role = "Customer", IsKycVerified = true, KycStatus = "Approved", IsActive = true, CreatedAt = seedDate },
+            new User { Id = 4, FullName = "Bibek Shrestha", Phone = "9833333333", Email = "bibek.tech@example.com", PasswordHash = mockHash, Address = "Kalanki, Kathmandu", Role = "Technician", IsKycVerified = true, KycStatus = "Approved", IsActive = true, CreatedAt = seedDate },
+            new User { Id = 5, FullName = "Kiran Magar", Phone = "9844444444", Email = "kiran.tech@example.com", PasswordHash = mockHash, Address = "Lalitpur, Kathmandu", Role = "Technician", IsKycVerified = true, KycStatus = "Approved", IsActive = true, CreatedAt = seedDate },
+            new User { Id = 6, FullName = "Hari Bahadur", Phone = "9855555555", Email = "hari.vendor@example.com", PasswordHash = mockHash, Address = "New Road, Kathmandu", Role = "Vendor", IsKycVerified = true, KycStatus = "Approved", IsActive = true, CreatedAt = seedDate }
         );
 
         // ── Mock vendor (owned by Hari, Id 6) ────────────────────────────────
