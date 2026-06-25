@@ -12,4 +12,7 @@ public interface IAdminService
 
     // Approve/reject KYC. rejectionReason is required when verified == false.
     Task<(bool Success, string Message)> ReviewKycAsync(int userId, bool verified, string? rejectionReason);
+
+    // Create a brand-new vendor (user account + approved profile) in one step.
+    Task<(bool Success, string Message, AdminUserDto? Data)> CreateVendorAccountAsync(CreateVendorAccountDto dto);
 }

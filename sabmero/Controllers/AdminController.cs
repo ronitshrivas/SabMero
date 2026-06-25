@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sabmero.DTOs.Admin;
-using sabmero.DTOs.Auth;
 using sabmero.DTOs.Order;
 using sabmero.DTOs.Service;
 using sabmero.Services;
@@ -64,6 +63,17 @@ public class AdminController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         var (success, message, data) = await _admin.CreateStaffAsync(dto);
+        return success
+            ? Ok(new { success = true, message, data })
+            : BadRequest(new { success = false, message });
+    }
+
+    // Create a brand-new vendor: user account + approved Vendor profile in one step.
+    [HttpPost("vendors")]
+    public async Task<IActionResult> CreateVendor([FromBody] CreateVendorAccountDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        var (success, message, data) = await _admin.CreateVendorAccountAsync(dto);
         return success
             ? Ok(new { success = true, message, data })
             : BadRequest(new { success = false, message });

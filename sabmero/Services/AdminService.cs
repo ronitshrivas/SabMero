@@ -153,6 +153,16 @@ public class AdminService : IAdminService
             user.IsKycVerified = true;
             user.KycStatus = "Approved";
             user.KycRejectionReason = null;
+
+            // If this user is a vendor, approving their KYC also clears them to
+            // sell (their Vendor profile becomes approved).
+            if (user.Role == "Vendor")
+            {
+                var vendor = await _db.Vendors.FirstOrDefaultAsync(v => v.UserId == user.Id);
+                if (vendor != null && !vendor.IsApproved)
+                    vendor.IsApproved = true;
+            }
+
             await _db.SaveChangesAsync();
             return (true, "KYC approved.");
         }
@@ -165,5 +175,65 @@ public class AdminService : IAdminService
         user.KycRejectionReason = rejectionReason.Trim();
         await _db.SaveChangesAsync();
         return (true, "KYC rejected.");
+    }
+
+    // Create a brand-new vendor from scratch: User account + approved Vendor
+    // profile in one transaction. Used by the admin "Create vendor" action.
+    public async Task<(bool Success, string Message, AdminUserDto? Data)> CreateVendorAccountAsync(CreateVendorAccountDto dto)
+    {
+        bool exists = await _db.Users.AnyAsync(u => u.Phone == dto.Phone);
+        if (exists)
+            return (false, "This phone number is already registered.", null);
+
+        await using var tx = await _db.Database.BeginTransactionAsync();
+
+        var user = new User
+        {
+            FullName = dto.FullName.Trim(),
+            Phone = dto.Phone.Trim(),
+            Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email!.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Address = dto.Address?.Trim() ?? string.Empty,
+            Role = "Vendor",
+            IsActive = true,
+            // Admin-created vendors still go through KYC before they can sell.
+            IsKycVerified = false,
+            KycStatus = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        var vendor = new Vendor
+        {
+            UserId = user.Id,
+            BusinessName = dto.BusinessName.Trim(),
+            BusinessAddress = dto.BusinessAddress.Trim(),
+            BusinessDocumentPath = dto.BusinessDocumentPath,
+            // Not approved to sell until KYC is verified.
+            IsApproved = false,
+            CommissionRate = dto.CommissionRate ?? 10.0m,
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Vendors.Add(vendor);
+        await _db.SaveChangesAsync();
+
+        await tx.CommitAsync();
+        _logger.LogInformation("Admin created vendor account {Phone} (vendor {VendorId}) — pending KYC", user.Phone, vendor.Id);
+
+        return (true, "Vendor account created. The vendor must pass KYC before selling.", new AdminUserDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Phone = user.Phone,
+            Email = user.Email,
+            Role = user.Role,
+            IsKycVerified = user.IsKycVerified,
+            KycStatus = user.KycStatus,
+            KycRejectionReason = user.KycRejectionReason,
+            KycDocumentPath = user.KycDocumentPath,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        });
     }
 }
