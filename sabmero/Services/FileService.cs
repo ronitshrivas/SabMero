@@ -38,8 +38,10 @@ public class FileService : IFileService
         var safeSub = string.Concat(subfolder.Where(char.IsLetterOrDigit));
         if (string.IsNullOrEmpty(safeSub)) safeSub = "misc";
 
-        // wwwroot may not exist on a fresh container — create it.
-        var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        // Save under {ContentRoot}/wwwroot/uploads/... — the SAME absolute base
+        // that UseStaticFiles serves from in Program.cs. Relying on WebRootPath
+        // is unsafe because it's null in a published/Docker build.
+        var webRoot = Path.Combine(_env.ContentRootPath, "wwwroot");
         var folder = Path.Combine(webRoot, "uploads", safeSub);
         Directory.CreateDirectory(folder);
 

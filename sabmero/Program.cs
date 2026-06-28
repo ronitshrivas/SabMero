@@ -190,9 +190,17 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowAll");
 
 // Serve uploaded images/documents from wwwroot (e.g. /uploads/products/abc.jpg).
-// Ensure the folder exists so the very first request doesn't fail on a fresh container.
-Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
-app.UseStaticFiles();
+// In a published/Docker build WebRootPath can be null, which makes the default
+// UseStaticFiles() serve nothing (every /uploads/... request 404s) even though
+// the files exist on disk. So we point it at an explicit absolute path that
+// matches where FileService saves files.
+var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(uploadsRoot, "uploads"));
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsRoot),
+    RequestPath = ""
+});
 
 //app.UseHttpsRedirection();
 app.UseAuthentication();    // ← must be BEFORE UseAuthorization
