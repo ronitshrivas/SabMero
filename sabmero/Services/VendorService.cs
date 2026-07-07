@@ -188,6 +188,12 @@ public class VendorService : IVendorService
         // Upgrade the user's role only now.
         user.Role = "Vendor";
 
+        // The applicant already submitted documents with their request, so
+        // approving the request also clears their KYC — no separate KYC step.
+        user.IsKycVerified = true;
+        user.KycStatus = "Approved";
+        user.KycRejectionReason = null;
+
         request.Status = "Approved";
         request.RejectionReason = null;
         request.ReviewedAt = DateTime.UtcNow;
