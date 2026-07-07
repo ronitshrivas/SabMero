@@ -17,7 +17,9 @@ public class VendorRequest
 
     public string BusinessName { get; set; } = string.Empty;
     public string BusinessAddress { get; set; } = string.Empty;
-    public string? BusinessDocumentPath { get; set; }        // uploaded registration/KYC doc
+    public string? BusinessDocumentPath { get; set; }        // uploaded registration/business doc
+    public string? CitizenshipDocumentPath { get; set; }     // uploaded citizenship document
+    public string? NidDocumentPath { get; set; }             // uploaded national ID (NID) card
 
     public string Status { get; set; } = "Pending";          // "Pending" | "Approved" | "Rejected"
     public string? RejectionReason { get; set; }             // set only when Status == "Rejected"

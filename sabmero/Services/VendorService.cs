@@ -57,6 +57,8 @@ public class VendorService : IVendorService
             BusinessName = dto.BusinessName.Trim(),
             BusinessAddress = dto.BusinessAddress.Trim(),
             BusinessDocumentPath = dto.BusinessDocumentPath,
+            CitizenshipDocumentPath = dto.CitizenshipDocumentPath,
+            NidDocumentPath = dto.NidDocumentPath,
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
@@ -66,6 +68,52 @@ public class VendorService : IVendorService
         _logger.LogInformation("Vendor request {Id} submitted by user {UserId}", request.Id, userId);
 
         return (true, "Vendor application submitted. Waiting for admin approval.",
+            await GetRequestDtoAsync(request.Id));
+    }
+
+    // ── PUBLIC self-registration (no login) ──
+    // Creates the User account AND a Pending VendorRequest with all three docs.
+    // The Vendor profile + role upgrade still happen only on admin approval.
+    public async Task<(bool Success, string Message, VendorRequestDto? Data)> RegisterAsync(RegisterVendorDto dto)
+    {
+        var phone = dto.Phone.Trim();
+        bool phoneTaken = await _db.Users.AnyAsync(u => u.Phone == phone);
+        if (phoneTaken)
+            return (false, "This phone number is already registered. Please log in and apply instead.", null);
+
+        var user = new User
+        {
+            FullName = dto.FullName.Trim(),
+            Phone = phone,
+            Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email!.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Address = dto.Address.Trim(),
+            // Stays a Customer until an admin approves the request.
+            Role = "Customer",
+            IsActive = true,
+            IsKycVerified = false,
+            KycStatus = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        var request = new VendorRequest
+        {
+            UserId = user.Id,
+            BusinessName = dto.BusinessName.Trim(),
+            BusinessAddress = dto.BusinessAddress.Trim(),
+            BusinessDocumentPath = dto.BusinessDocumentPath,
+            CitizenshipDocumentPath = dto.CitizenshipDocumentPath,
+            NidDocumentPath = dto.NidDocumentPath,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.VendorRequests.Add(request);
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Public vendor registration: user {UserId}, request {ReqId}", user.Id, request.Id);
+        return (true, "Registration submitted. An admin will review your documents.",
             await GetRequestDtoAsync(request.Id));
     }
 
@@ -203,6 +251,8 @@ public class VendorService : IVendorService
             BusinessName = r.BusinessName,
             BusinessAddress = r.BusinessAddress,
             BusinessDocumentPath = r.BusinessDocumentPath,
+            CitizenshipDocumentPath = r.CitizenshipDocumentPath,
+            NidDocumentPath = r.NidDocumentPath,
             Status = r.Status,
             RejectionReason = r.RejectionReason,
             VendorId = r.VendorId,

@@ -357,6 +357,8 @@ public class OrderService : IOrderService
             Id = order.Id,
             UserId = order.UserId,
             CustomerName = order.User != null ? order.User.FullName : string.Empty,
+            CustomerPhone = order.User != null ? order.User.Phone : null,
+            CustomerEmail = order.User != null ? order.User.Email : null,
             RiderId = order.RiderId,
             RiderName = riderName,
             SubTotal = subTotal,

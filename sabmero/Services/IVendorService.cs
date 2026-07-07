@@ -8,6 +8,9 @@ public interface IVendorService
     // Apply → creates a Pending VendorRequest (no profile, no role change yet).
     Task<(bool Success, string Message, VendorRequestDto? Data)> ApplyAsync(int userId, CreateVendorDto dto);
 
+    // PUBLIC self-registration → creates the User + a Pending VendorRequest.
+    Task<(bool Success, string Message, VendorRequestDto? Data)> RegisterAsync(RegisterVendorDto dto);
+
     // Applicant polls their latest request status (Pending/Approved/Rejected + reason).
     Task<VendorRequestDto?> GetMyRequestAsync(int userId);
 

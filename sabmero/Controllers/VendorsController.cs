@@ -26,6 +26,19 @@ public class VendorsController : ControllerBase
         _service = service;
     }
 
+    // PUBLIC self-registration — no login required. Creates the account + a
+    // Pending vendor request with all three documents.
+    [AllowAnonymous]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterVendorDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        var (success, message, data) = await _service.RegisterAsync(dto);
+        return success
+            ? Ok(new { success = true, message, data })
+            : BadRequest(new { success = false, message });
+    }
+
     [Authorize]
     [HttpPost("apply")]
     public async Task<IActionResult> Apply([FromBody] CreateVendorDto dto)

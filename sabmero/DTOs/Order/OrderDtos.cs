@@ -80,6 +80,8 @@ public class OrderDto
     public int Id { get; set; }
     public int UserId { get; set; }
     public string CustomerName { get; set; } = string.Empty;
+    public string? CustomerPhone { get; set; }
+    public string? CustomerEmail { get; set; }
     public int? RiderId { get; set; }
     public string? RiderName { get; set; }
     public decimal SubTotal { get; set; }        // sum of items before discount
