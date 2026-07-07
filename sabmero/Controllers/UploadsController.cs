@@ -39,6 +39,7 @@ public class UploadsController : ControllerBase
     [HttpPost("payment")]
     public Task<IActionResult> Payment(IFormFile file) => Handle(file, "payment");
 
+    [AllowAnonymous]
     [HttpPost("kyc")]
     public Task<IActionResult> Kyc(IFormFile file) => Handle(file, "kyc");
 
