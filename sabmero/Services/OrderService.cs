@@ -16,11 +16,13 @@ public class OrderService : IOrderService
 {
     private readonly AppDbContext _db;
     private readonly ILogger<OrderService> _logger;
+    private readonly IPushService _push;
 
-    public OrderService(AppDbContext db, ILogger<OrderService> logger)
+    public OrderService(AppDbContext db, ILogger<OrderService> logger, IPushService push)
     {
         _db = db;
         _logger = logger;
+        _push = push;
     }
 
     public async Task<(bool Success, string Message, OrderDto? Data)> PlaceOrderAsync(int userId, PlaceOrderDto dto)
@@ -246,6 +248,23 @@ public class OrderService : IOrderService
             order.PaymentStatus = "Paid";   // COD collected on delivery
 
         await _db.SaveChangesAsync();
+
+        // Notify the customer about the order status change.
+        var customer = await _db.Users.FindAsync(order.UserId);
+        if (customer != null)
+        {
+            var (title, msg) = status switch
+            {
+                "Processing" => ("Order Confirmed 🛒", $"Your order #{order.Id} is being processed."),
+                "Dispatched" => ("Order Dispatched 🚚", $"Your order #{order.Id} is on the way!"),
+                "Delivered" => ("Order Delivered 📦", $"Your order #{order.Id} has been delivered. Enjoy!"),
+                "Cancelled" => ("Order Cancelled", $"Your order #{order.Id} has been cancelled."),
+                _ => ("Order Update", $"Your order #{order.Id} is now '{status}'.")
+            };
+            await _push.SendToTokenAsync(customer.FcmToken, title, msg,
+                new Dictionary<string, string> { ["type"] = "order", ["orderId"] = order.Id.ToString(), ["status"] = status });
+        }
+
         return (true, $"Order status updated to {status}.");
     }
 

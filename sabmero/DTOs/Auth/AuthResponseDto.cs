@@ -16,6 +16,7 @@ public class UserProfileDto
     public string Phone { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string Address { get; set; } = string.Empty;
+    public string? ProfilePictureUrl { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsKycVerified { get; set; }
     public bool IsActive { get; set; }

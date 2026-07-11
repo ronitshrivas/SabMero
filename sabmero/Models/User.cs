@@ -31,6 +31,12 @@ public class User
     public bool IsKycVerified { get; set; } = false;
     public string? KycDocumentPath { get; set; }        // file path on server
 
+    // Relative path of the profile picture on the server, e.g. "/uploads/profile/abc.jpg".
+    public string? ProfilePicturePath { get; set; }
+
+    // Latest FCM device token for push notifications (FCM HTTP v1).
+    public string? FcmToken { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

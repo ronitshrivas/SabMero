@@ -93,6 +93,9 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IPushService, FcmPushService>();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 4. CONTROLLERS

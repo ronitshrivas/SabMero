@@ -40,6 +40,8 @@
     <None Remove="DTOs\Return\" />
     <None Remove="DTOs\Review\" />
     <None Remove="DTOs\Payment\" />
+    <None Remove="DTOs\Reset\" />
+    <None Remove="secrets\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
@@ -60,5 +62,12 @@
     <Folder Include="DTOs\Return\" />
     <Folder Include="DTOs\Review\" />
     <Folder Include="DTOs\Payment\" />
+    <Folder Include="DTOs\Reset\" />
+    <Folder Include="secrets\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="Properties\launchSettings.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

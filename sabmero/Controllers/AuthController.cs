@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using sabmero.DTOs.Auth;
 using sabmero.Services;
 using System.Security.Claims;
+using sabmero.Helpers;
 
 namespace sabmero.Controllers;
 
@@ -142,5 +143,56 @@ public class AuthController : ControllerBase
                 role
             }
         });
+    }
+
+    // ── POST /api/auth/forgot-password ────────────────────────────────────────
+    // Body: { "email": "ram@gmail.com" } → emails a 6-digit reset code.
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        var (success, message) = await _auth.ForgotPasswordAsync(dto);
+        if (!success) return BadRequest(new { success = false, message });
+        return Ok(new { success = true, message });
+    }
+
+    // ── POST /api/auth/reset-password ─────────────────────────────────────────
+    // Body: { "email": "...", "code": "123456", "newPassword": "NewPass123" }
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        var (success, message) = await _auth.ResetPasswordAsync(dto);
+        if (!success) return BadRequest(new { success = false, message });
+        return Ok(new { success = true, message });
+    }
+
+    // ── PUT /api/auth/profile ─────────────────────────────────────────────────
+    // multipart/form-data: fullName (text), email (text), profilePicture (file)
+    // All fields optional — only what's sent gets updated.
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile(
+        [FromForm] string? fullName,
+        [FromForm] string? email,
+        [FromForm] IFormFile? profilePicture)
+    {
+        var userId = User.GetUserId();
+        var (success, message, data) = await _auth.UpdateProfileAsync(userId, fullName, email, profilePicture);
+        if (!success) return BadRequest(new { success = false, message });
+        return Ok(new { success = true, message, data });
+    }
+
+    // ── POST /api/auth/fcm-token ──────────────────────────────────────────────
+    // Body: { "token": "<device FCM token>" } — the app calls this after login
+    // and whenever Firebase rotates the token.
+    [Authorize]
+    [HttpPost("fcm-token")]
+    public async Task<IActionResult> SaveFcmToken([FromBody] FcmTokenDto dto)
+    {
+        var userId = User.GetUserId();
+        var (success, message) = await _auth.SaveFcmTokenAsync(userId, dto.Token);
+        if (!success) return BadRequest(new { success = false, message });
+        return Ok(new { success = true, message });
     }
 }

@@ -12,11 +12,13 @@ public class ServiceBookingService : IServiceBookingService
 {
     private readonly AppDbContext _db;
     private readonly ILogger<ServiceBookingService> _logger;
+    private readonly IPushService _push;
 
-    public ServiceBookingService(AppDbContext db, ILogger<ServiceBookingService> logger)
+    public ServiceBookingService(AppDbContext db, ILogger<ServiceBookingService> logger, IPushService push)
     {
         _db = db;
         _logger = logger;
+        _push = push;
     }
 
     public async Task<(bool Success, string Message, BookingDto? Data)> CreateAsync(int userId, CreateBookingDto dto)
@@ -176,6 +178,23 @@ public class ServiceBookingService : IServiceBookingService
         }
 
         await _db.SaveChangesAsync();
+
+        // Notify the customer about the status change (fire-and-forget safe).
+        var customer = await _db.Users.FindAsync(booking.UserId);
+        if (customer != null)
+        {
+            var (title, msg) = dto.Status switch
+            {
+                "Approved" => ("Booking Approved ✅", $"Your {booking.ServiceType} booking #{booking.Id} has been approved. A technician has been assigned."),
+                "Processing" => ("Booking In Progress 🔧", $"Your {booking.ServiceType} booking #{booking.Id} is being processed."),
+                "OnTheWay" => ("Technician On The Way 🛵", $"The technician for booking #{booking.Id} is on the way to your location."),
+                "Completed" => ("Service Completed 🎉", $"Your {booking.ServiceType} booking #{booking.Id} is completed. Please leave a review!"),
+                _ => ("Booking Update", $"Your booking #{booking.Id} is now '{dto.Status}'.")
+            };
+            await _push.SendToTokenAsync(customer.FcmToken, title, msg,
+                new Dictionary<string, string> { ["type"] = "booking", ["bookingId"] = booking.Id.ToString(), ["status"] = dto.Status });
+        }
+
         return (true, $"Booking status updated to {dto.Status}.");
     }
 
@@ -186,8 +205,12 @@ public class ServiceBookingService : IServiceBookingService
             return (false, "Booking not found.");
         if (booking.UserId != userId)
             return (false, "You can only cancel your own bookings.");
-        if (booking.Status != "Pending" && booking.Status != "Processing")
-            return (false, "This booking can no longer be cancelled.");
+        // A customer can cancel any time BEFORE the technician is on the way.
+        // (Previously "Approved" was missing here, so cancelling an approved
+        // booking always failed with a 400 — that was the bug.)
+        var cancellable = new[] { "Pending", "Approved", "Processing" };
+        if (!cancellable.Contains(booking.Status))
+            return (false, "This booking can no longer be cancelled because the technician is already on the way or the job is completed.");
 
         // Delete the booking record on cancellation.
         _db.ServiceBookings.Remove(booking);

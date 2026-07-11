@@ -13,12 +13,17 @@ public class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly IJwtService _jwt;
     private readonly ILogger<AuthService> _logger;
+    private readonly IEmailService _email;
+    private readonly IFileService _files;
 
-    public AuthService(AppDbContext db, IJwtService jwt, ILogger<AuthService> logger)
+    public AuthService(AppDbContext db, IJwtService jwt, ILogger<AuthService> logger,
+                       IEmailService email, IFileService files)
     {
         _db = db;
         _jwt = jwt;
         _logger = logger;
+        _email = email;
+        _files = files;
     }
 
     // ── REGISTER ─────────────────────────────────────────────────────────────
@@ -190,11 +195,135 @@ public class AuthService : IAuthService
                 Phone = user.Phone,
                 Email = user.Email,
                 Address = user.Address,
+                ProfilePictureUrl = user.ProfilePicturePath,
                 Role = user.Role,
                 IsKycVerified = user.IsKycVerified,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt
             }
         };
+    }
+
+    // ── FORGOT PASSWORD (email OTP) ───────────────────────────────────────────
+    // Flutter sends: Email. A 6-digit code is emailed; valid 5 minutes.
+    public async Task<(bool Success, string Message)> ForgotPasswordAsync(ForgotPasswordDto dto)
+    {
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email);
+
+        // Don't reveal whether the email exists (prevents account enumeration).
+        if (user == null)
+            return (true, "If that email is registered, a reset code has been sent.");
+
+        // Invalidate any previous reset codes for this email.
+        var oldOtps = await _db.OtpCodes
+            .Where(o => o.Phone == email && o.Purpose == "PasswordReset" && !o.IsUsed)
+            .ToListAsync();
+        foreach (var old in oldOtps) old.IsUsed = true;
+
+        var code = Random.Shared.Next(100000, 999999).ToString();
+        _db.OtpCodes.Add(new OtpCode
+        {
+            Phone = email,                 // for reset codes, this column holds the EMAIL
+            Code = code,
+            Purpose = "PasswordReset",
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5),
+            IsUsed = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
+
+        await _email.SendOtpAsync(user.Email!, code);
+        _logger.LogInformation("Password reset code sent to {Email}", email);
+
+        return (true, "If that email is registered, a reset code has been sent.");
+    }
+
+    // ── RESET PASSWORD ────────────────────────────────────────────────────────
+    // Flutter sends: Email, Code, NewPassword.
+    public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        var email = dto.Email.Trim().ToLowerInvariant();
+
+        var otp = await _db.OtpCodes
+            .Where(o => o.Phone == email && o.Purpose == "PasswordReset" && !o.IsUsed)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (otp == null)
+            return (false, "No reset code found. Please request a new one.");
+        if (otp.ExpiresAt < DateTime.UtcNow)
+            return (false, "The reset code has expired. Please request a new one.");
+        if (otp.Code != dto.Code)
+            return (false, "Incorrect reset code.");
+
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == email);
+        if (user == null)
+            return (false, "Account not found.");
+
+        otp.IsUsed = true;
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Password reset for {Email}", email);
+        return (true, "Password reset successful. You can now log in with your new password.");
+    }
+
+    // ── UPDATE PROFILE (name / email / picture) ──────────────────────────────
+    public async Task<(bool Success, string Message, UserProfileDto? Data)> UpdateProfileAsync(
+        int userId, string? fullName, string? email, Microsoft.AspNetCore.Http.IFormFile? profilePicture)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+            return (false, "User not found.", null);
+
+        if (!string.IsNullOrWhiteSpace(fullName))
+            user.FullName = fullName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var normalized = email.Trim();
+            var taken = await _db.Users.AnyAsync(u =>
+                u.Id != userId && u.Email != null && u.Email.ToLower() == normalized.ToLower());
+            if (taken)
+                return (false, "That email is already used by another account.", null);
+            user.Email = normalized;
+        }
+
+        if (profilePicture != null)
+        {
+            var (ok, msg, path) = await _files.SaveAsync(profilePicture, "profile");
+            if (!ok) return (false, msg, null);
+            user.ProfilePicturePath = path;
+        }
+
+        await _db.SaveChangesAsync();
+        _logger.LogInformation("Profile updated for user {UserId}", userId);
+
+        return (true, "Profile updated.", new UserProfileDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Phone = user.Phone,
+            Email = user.Email,
+            Address = user.Address,
+            ProfilePictureUrl = user.ProfilePicturePath,
+            Role = user.Role,
+            IsKycVerified = user.IsKycVerified,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        });
+    }
+
+    // ── SAVE FCM TOKEN ────────────────────────────────────────────────────────
+    public async Task<(bool Success, string Message)> SaveFcmTokenAsync(int userId, string token)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null)
+            return (false, "User not found.");
+
+        user.FcmToken = token;
+        await _db.SaveChangesAsync();
+        return (true, "Device token saved.");
     }
 }

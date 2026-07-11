@@ -1,1 +1,7 @@
 sabmero/.env
+secrets/
+wwwroot/uploads/
+bin/
+obj/
+.vs/
+.DS_Store
