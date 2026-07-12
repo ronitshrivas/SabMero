@@ -51,7 +51,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<OtpCode>(e =>
         {
             e.HasKey(o => o.Id);
-            e.Property(o => o.Phone).HasMaxLength(20).IsRequired();
+            e.Property(o => o.Phone).HasMaxLength(100).IsRequired();
             e.Property(o => o.Code).HasMaxLength(6).IsRequired();
         });
 
