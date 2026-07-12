@@ -27,14 +27,13 @@ public class AuthService : IAuthService
     }
 
     // ── REGISTER ─────────────────────────────────────────────────────────────
-    // Flutter sends: FullName, Phone, Password, Address, Role
+    // Flutter sends: FullName, Phone, Password, Address
     // Returns: JWT token + user profile
+    // SECURITY: the server assigns Role = "Customer" unconditionally.
+    // Never derive the role from client input (allow-nothing-by-default,
+    // not deny-by-exception). Privileged roles have their own flows.
     public async Task<(bool Success, string Message, AuthResponseDto? Data)> RegisterAsync(RegisterDto dto)
     {
-        // Block self-registration as Admin
-        if (dto.Role == "Admin")
-            return (false, "Cannot self-register as Admin.", null);
-
         // Check if phone is already taken
         bool phoneExists = await _db.Users.AnyAsync(u => u.Phone == dto.Phone);
         if (phoneExists)
@@ -48,7 +47,7 @@ public class AuthService : IAuthService
             Email = dto.Email?.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),   // never store plain password
             Address = dto.Address.Trim(),
-            Role = dto.Role,
+            Role = "Customer",   // server-assigned; see note above
             IsKycVerified = false,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
