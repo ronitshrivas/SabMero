@@ -23,6 +23,7 @@ services:
       DATABASE_URL: "postgresql://sabmero:${DB_PASSWORD}@db:5432/SabmeroDb"
       JWT_SECRET: ${JWT_SECRET}
       ASPNETCORE_ENVIRONMENT: Production
+      Brevo__ApiKey: ${BREVO_API_KEY}
     ports:
       - "8080:8080"
     networks:
