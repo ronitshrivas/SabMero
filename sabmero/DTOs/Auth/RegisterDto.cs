@@ -24,7 +24,13 @@ public class RegisterDto
     [MaxLength(300)]
     public string Address { get; set; } = string.Empty;
 
-    // Optional: "Customer" (default) | "Vendor" | "Technician" | "Rider"
-    // Note: "Admin" cannot be self-registered
-    public string Role { get; set; } = "Customer";
+    // NOTE: There is intentionally NO Role property here. Role is an
+    // authorization attribute and must be assigned by the server, never
+    // chosen by the client. Public registration always creates a Customer;
+    // privileged roles are created only through their controlled flows:
+    //   Vendor      → POST /api/Vendors/register + admin approval
+    //   Staff/Tech/Rider → POST /api/admin/staff (admin only)
+    //   Admin       → seeded in the database
+    // If a client still sends "role" in the JSON body it is silently
+    // ignored by the model binder, so old app versions keep working.
 }
