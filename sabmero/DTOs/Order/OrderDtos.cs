@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace sabmero.DTOs.Order;
 
@@ -44,6 +44,10 @@ public class PlaceOrderDto
 
     // "COD" | "QR"
     public string PaymentMethod { get; set; } = "COD";
+
+    // Server path of the payment screenshot (from POST /api/Uploads/payment).
+    // Sent by the app for QR payments; null for COD.
+    public string? PaymentScreenshotPath { get; set; }
 
     // Optional promo code typed at checkout
     public string? PromoCode { get; set; }

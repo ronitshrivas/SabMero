@@ -107,13 +107,21 @@ public class OrderService : IOrderService
         var total = subTotal - discount;
         if (total < 0) total = 0;
 
+        // QR orders that arrive WITH a screenshot go straight to "Submitted"
+        // so they appear in the vendor/admin "awaiting verification" list.
+        // (Previously the screenshot from the app was silently dropped here
+        // and the status stayed "Pending" — that was the bug.)
+        var isQr = dto.PaymentMethod == "QR";
+        var hasScreenshot = isQr && !string.IsNullOrWhiteSpace(dto.PaymentScreenshotPath);
+
         var order = new Order
         {
             UserId = userId,
             TotalAmount = total,
             CommissionAmount = Math.Round(commissionTotal, 2),
-            PaymentMethod = dto.PaymentMethod == "QR" ? "QR" : "COD",
-            PaymentStatus = "Pending",
+            PaymentMethod = isQr ? "QR" : "COD",
+            PaymentScreenshotPath = hasScreenshot ? dto.PaymentScreenshotPath : null,
+            PaymentStatus = hasScreenshot ? "Submitted" : "Pending",
             Status = "Pending",
             DeliveryAddress = dto.DeliveryAddress.Trim(),
             PromoCode = appliedPromo,
