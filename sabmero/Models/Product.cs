@@ -14,7 +14,11 @@ public class Product
     public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public int Stock { get; set; } = 0;
-    public string? ImagePath { get; set; }
+    public string? ImagePath { get; set; }          // cover image (kept for backward compat)
+
+    // Additional gallery images, stored as a |-separated list of paths.
+    // Exposed to clients as List<string> ImagePaths (cover first).
+    public string? ImagePathsCsv { get; set; }
     public string? SizeOptions { get; set; }    // e.g. ["S","M","L","XL"]
     public string? ColorOptions { get; set; }   // e.g. ["Red","Blue","Black"]
     public string? Unit { get; set; }           // "Kg" | "Ltr" | "Pkt"

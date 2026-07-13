@@ -214,15 +214,41 @@ public class OrderService : IOrderService
         return await BuildManyAsync(ids);
     }
 
-    public async Task<(bool Success, string Message)> UpdateStatusAsync(int orderId, string status)
+    public async Task<(bool Success, string Message)> UpdateStatusAsync(int orderId, string status, int actorUserId, string actorRole)
     {
         var allowed = new[] { "Pending", "Processing", "Dispatched", "Delivered", "Cancelled" };
         if (!allowed.Contains(status))
             return (false, "Invalid status.");
 
-        var order = await _db.Orders.Include(o => o.OrderItems).FirstOrDefaultAsync(o => o.Id == orderId);
+        var order = await _db.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+            .FirstOrDefaultAsync(o => o.Id == orderId);
         if (order == null)
             return (false, "Order not found.");
+
+        // ── Per-role permission rules ────────────────────────────────────────
+        // Admin  : any status.
+        // Vendor : only orders containing their products, and only the statuses
+        //          that make sense for a seller — Confirm (Processing),
+        //          hand to delivery (Dispatched), or Cancel.
+        // Rider  : only delivery-side statuses.
+        if (actorRole == "Vendor")
+        {
+            var vendor = await _db.Vendors.FirstOrDefaultAsync(v => v.UserId == actorUserId);
+            var ownsOrder = vendor != null &&
+                order.OrderItems.Any(oi => oi.Product != null && oi.Product.VendorId == vendor.Id);
+            if (!ownsOrder)
+                return (false, "This order doesn't contain any of your products.");
+
+            var vendorAllowed = new[] { "Processing", "Dispatched", "Cancelled" };
+            if (!vendorAllowed.Contains(status))
+                return (false, "Vendors can set the status to Processing, Dispatched, or Cancelled only.");
+        }
+        else if (actorRole == "Rider")
+        {
+            var riderAllowed = new[] { "Dispatched", "Delivered" };
+            if (!riderAllowed.Contains(status))
+                return (false, "Riders can set the status to Dispatched or Delivered only.");
+        }
 
         // A QR order can't move forward until the admin/vendor has verified the
         // payment screenshot. Cancelling is still allowed.

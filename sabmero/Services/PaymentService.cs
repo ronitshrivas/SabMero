@@ -20,11 +20,13 @@ public class PaymentService : IPaymentService
 
     private readonly AppDbContext _db;
     private readonly ILogger<PaymentService> _logger;
+    private readonly IPushService _push;
 
-    public PaymentService(AppDbContext db, ILogger<PaymentService> logger)
+    public PaymentService(AppDbContext db, ILogger<PaymentService> logger, IPushService push)
     {
         _db = db;
         _logger = logger;
+        _push = push;
     }
 
     // ── Admin sets the global QR image ───────────────────────────────────────
@@ -124,6 +126,17 @@ public class PaymentService : IPaymentService
             await _db.SaveChangesAsync();
             _logger.LogInformation("Order {Id} payment {Result} by user {UserId}",
                 dto.Id, order.PaymentStatus, userId);
+
+            // Tell the customer their payment was reviewed.
+            var customer = await _db.Users.FindAsync(order.UserId);
+            if (customer != null)
+            {
+                var (title, body) = dto.Approve
+                    ? ("Payment Verified ✅", $"Your payment for order #{order.Id} has been verified. Your order will be processed soon.")
+                    : ("Payment Rejected ❌", $"Your payment for order #{order.Id} could not be verified. Please re-submit a valid screenshot.");
+                await _push.SendToTokenAsync(customer.FcmToken, title, body,
+                    new Dictionary<string, string> { ["type"] = "payment", ["orderId"] = order.Id.ToString() });
+            }
             return (true, dto.Approve ? "Payment verified." : "Payment rejected.");
         }
         else // Booking
@@ -141,6 +154,16 @@ public class PaymentService : IPaymentService
             await _db.SaveChangesAsync();
             _logger.LogInformation("Booking {Id} payment {Result} by user {UserId}",
                 dto.Id, booking.PaymentStatus, userId);
+
+            var bkCustomer = await _db.Users.FindAsync(booking.UserId);
+            if (bkCustomer != null)
+            {
+                var (title, body) = dto.Approve
+                    ? ("Payment Verified ✅", $"Your payment for booking #{booking.Id} has been verified.")
+                    : ("Payment Rejected ❌", $"Your payment for booking #{booking.Id} could not be verified. Please re-submit.");
+                await _push.SendToTokenAsync(bkCustomer.FcmToken, title, body,
+                    new Dictionary<string, string> { ["type"] = "payment", ["bookingId"] = booking.Id.ToString() });
+            }
             return (true, dto.Approve ? "Payment verified." : "Payment rejected.");
         }
     }

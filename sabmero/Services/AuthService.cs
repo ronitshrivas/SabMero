@@ -6,8 +6,7 @@ using BCrypt.Net;
 
 namespace sabmero.Services;
 
-// This class contains ALL the authentication logic.
-// The Controller just calls these methods and returns the result to Flutter.
+
 public class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
@@ -26,12 +25,6 @@ public class AuthService : IAuthService
         _files = files;
     }
 
-    // ── REGISTER ─────────────────────────────────────────────────────────────
-    // Flutter sends: FullName, Phone, Password, Address
-    // Returns: JWT token + user profile
-    // SECURITY: the server assigns Role = "Customer" unconditionally.
-    // Never derive the role from client input (allow-nothing-by-default,
-    // not deny-by-exception). Privileged roles have their own flows.
     public async Task<(bool Success, string Message, AuthResponseDto? Data)> RegisterAsync(RegisterDto dto)
     {
         // Check if phone is already taken
@@ -90,9 +83,7 @@ public class AuthService : IAuthService
         return (true, "Login successful.", response);
     }
 
-    // ── SEND OTP ─────────────────────────────────────────────────────────────
-    // Flutter sends: Phone
-    // Backend generates 6-digit code, saves it, logs it (in production → send via SMS API)
+
     public async Task<(bool Success, string Message)> SendOtpAsync(SendOtpDto dto)
     {
         // Mark any old unused OTPs for this phone as used (prevent reuse)
@@ -127,9 +118,7 @@ public class AuthService : IAuthService
         return (true, $"OTP sent to {dto.Phone}. Valid for 5 minutes.");
     }
 
-    // ── VERIFY OTP ────────────────────────────────────────────────────────────
-    // Flutter sends: Phone, Code
-    // If correct → creates account if new phone, then returns JWT token
+
     public async Task<(bool Success, string Message, AuthResponseDto? Data)> VerifyOtpAsync(VerifyOtpDto dto)
     {
         // Find the most recent unused OTP for this phone
@@ -180,8 +169,6 @@ public class AuthService : IAuthService
         return (true, "OTP verified. Login successful.", response);
     }
 
-    // ── HELPER ────────────────────────────────────────────────────────────────
-    // Builds the standard response object from a user + token
     private static AuthResponseDto BuildAuthResponse(string token, User user)
     {
         return new AuthResponseDto
@@ -203,8 +190,7 @@ public class AuthService : IAuthService
         };
     }
 
-    // ── FORGOT PASSWORD (email OTP) ───────────────────────────────────────────
-    // Flutter sends: Email. A 6-digit code is emailed; valid 5 minutes.
+
     public async Task<(bool Success, string Message)> ForgotPasswordAsync(ForgotPasswordDto dto)
     {
         var email = dto.Email.Trim().ToLowerInvariant();
@@ -238,8 +224,7 @@ public class AuthService : IAuthService
         return (true, "If that email is registered, a reset code has been sent.");
     }
 
-    // ── RESET PASSWORD ────────────────────────────────────────────────────────
-    // Flutter sends: Email, Code, NewPassword.
+
     public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto dto)
     {
         var email = dto.Email.Trim().ToLowerInvariant();

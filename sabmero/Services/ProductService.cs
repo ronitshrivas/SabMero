@@ -117,7 +117,8 @@ public class ProductService : IProductService
             Description = dto.Description.Trim(),
             Price = dto.Price,
             Stock = dto.Stock,
-            ImagePath = dto.ImagePath,
+            ImagePath = ResolveCover(dto.ImagePath, dto.ImagePaths),
+            ImagePathsCsv = JoinImages(dto.ImagePaths),
             SizeOptions = dto.SizeOptions,
             ColorOptions = dto.ColorOptions,
             Unit = dto.Unit,
@@ -155,7 +156,8 @@ public class ProductService : IProductService
         product.Price = dto.Price;
         product.Stock = dto.Stock;
         product.CategoryId = dto.CategoryId;
-        product.ImagePath = dto.ImagePath;
+        product.ImagePath = ResolveCover(dto.ImagePath, dto.ImagePaths);
+        product.ImagePathsCsv = JoinImages(dto.ImagePaths);
         product.SizeOptions = dto.SizeOptions;
         product.ColorOptions = dto.ColorOptions;
         product.Unit = dto.Unit;
@@ -198,6 +200,7 @@ public class ProductService : IProductService
         Price = p.Price,
         Stock = p.Stock,
         ImagePath = p.ImagePath,
+        ImagePathsCsv_Internal = p.ImagePathsCsv,
         SizeOptions = p.SizeOptions,
         ColorOptions = p.ColorOptions,
         Unit = p.Unit,
@@ -206,4 +209,17 @@ public class ProductService : IProductService
         ReviewCount = p.Reviews.Count,
         CreatedAt = p.CreatedAt
     };
+
+    // ── Multi-image helpers ──────────────────────────────────────────────────
+    // Cover = explicit ImagePath if given, else first of ImagePaths.
+    private static string? ResolveCover(string? imagePath, List<string>? imagePaths)
+        => !string.IsNullOrWhiteSpace(imagePath)
+            ? imagePath
+            : imagePaths?.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+    private static string? JoinImages(List<string>? imagePaths)
+    {
+        var clean = imagePaths?.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        return clean == null || clean.Count == 0 ? null : string.Join("|", clean);
+    }
 }

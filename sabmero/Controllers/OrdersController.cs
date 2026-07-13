@@ -81,12 +81,16 @@ public class OrdersController : ControllerBase
         return Ok(new { success = true, data });
     }
 
-    [Authorize(Roles = "Admin,Rider")]
+    // Admin: any status. Vendor: Processing/Dispatched/Cancelled on orders
+    // containing their products (this is how a vendor CONFIRMS an order —
+    // setting Processing notifies the customer "Order Confirmed").
+    // Rider: Dispatched/Delivered.
+    [Authorize(Roles = "Admin,Rider,Vendor")]
     [HttpPut("{id:int}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        var (success, message) = await _service.UpdateStatusAsync(id, dto.Status);
+        var (success, message) = await _service.UpdateStatusAsync(id, dto.Status, User.GetUserId(), User.GetRole());
         return success
             ? Ok(new { success = true, message })
             : BadRequest(new { success = false, message });

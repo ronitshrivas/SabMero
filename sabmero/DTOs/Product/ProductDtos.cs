@@ -24,6 +24,10 @@ public class CreateProductDto
 
     public string? ImagePath { get; set; }
 
+    // Multiple images: first one becomes the cover (ImagePath). Upload each
+    // file via POST /api/Uploads/product first, then send the returned paths.
+    public List<string>? ImagePaths { get; set; }
+
     // For clothing/footwear — JSON arrays as strings e.g. ["S","M","L"]
     public string? SizeOptions { get; set; }
     public string? ColorOptions { get; set; }
@@ -50,6 +54,7 @@ public class UpdateProductDto
 
     public int CategoryId { get; set; }
     public string? ImagePath { get; set; }
+    public List<string>? ImagePaths { get; set; }
     public string? SizeOptions { get; set; }
     public string? ColorOptions { get; set; }
     public string? Unit { get; set; }
@@ -69,6 +74,26 @@ public class ProductDto
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public string? ImagePath { get; set; }
+
+    // Raw |-separated extra image paths from the DB. Filled by the EF
+    // projection; not serialized to clients (they get ImagePaths instead).
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? ImagePathsCsv_Internal { get; set; }
+
+    // All images with the cover first, duplicates removed. Always non-null;
+    // falls back to [ImagePath] for products created before multi-image.
+    public List<string> ImagePaths
+    {
+        get
+        {
+            var list = new List<string>();
+            if (!string.IsNullOrWhiteSpace(ImagePath)) list.Add(ImagePath!);
+            if (!string.IsNullOrWhiteSpace(ImagePathsCsv_Internal))
+                foreach (var pth in ImagePathsCsv_Internal!.Split('|', StringSplitOptions.RemoveEmptyEntries))
+                    if (!list.Contains(pth)) list.Add(pth);
+            return list;
+        }
+    }
     public string? SizeOptions { get; set; }
     public string? ColorOptions { get; set; }
     public string? Unit { get; set; }
