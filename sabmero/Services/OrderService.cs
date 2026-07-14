@@ -324,6 +324,12 @@ public class OrderService : IOrderService
             order.Status = "Dispatched";
 
         await _db.SaveChangesAsync();
+
+        // Notify the rider they've been assigned a new delivery.
+        await _push.SendToTokenAsync(rider.FcmToken, "New Delivery Assigned 🛵",
+            $"You've been assigned order #{order.Id} for delivery to {order.DeliveryAddress}.",
+            new Dictionary<string, string> { ["type"] = "order_assigned", ["orderId"] = order.Id.ToString() });
+
         return (true, "Rider assigned.");
     }
 

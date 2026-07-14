@@ -29,6 +29,7 @@ public class BookingsController : ControllerBase
         _service = service;
     }
 
+    [Authorize(Roles = "Customer")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateBookingDto dto)
     {

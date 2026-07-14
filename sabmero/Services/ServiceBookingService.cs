@@ -138,6 +138,12 @@ public class ServiceBookingService : IServiceBookingService
             booking.Status = "Approved";
 
         await _db.SaveChangesAsync();
+
+        // Notify the technician they've been assigned a new job.
+        await _push.SendToTokenAsync(tech.FcmToken, "New Job Assigned 🔧",
+            $"You've been assigned a {booking.ServiceType} job (#{booking.Id}) at {booking.ServiceAddress}.",
+            new Dictionary<string, string> { ["type"] = "booking_assigned", ["bookingId"] = booking.Id.ToString() });
+
         return (true, "Technician assigned.");
     }
 
