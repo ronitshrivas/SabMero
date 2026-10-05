@@ -25,7 +25,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       Brevo__ApiKey: ${BREVO_API_KEY}
     volumes:
-      - sabmero_uploads:/app/wwwroot/uploads
+      # Host bind mount: uploads live in a plain folder on the droplet,
+      # so they survive rebuilds, 'compose down -v', and volume prunes, and
+      # can be backed up with a simple tar/rsync. Never wiped by a deploy.
+      - /root/sabmero-uploads:/app/wwwroot/uploads
     ports:
       - "8080:8080"
     networks:
@@ -34,4 +37,3 @@ networks:
   sabmero_net:
 volumes:
   sabmero_pgdata:
-  sabmero_uploads:
