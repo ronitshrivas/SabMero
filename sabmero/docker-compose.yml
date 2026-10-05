@@ -24,6 +24,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ASPNETCORE_ENVIRONMENT: Production
       Brevo__ApiKey: ${BREVO_API_KEY}
+    volumes:
+      - sabmero_uploads:/app/wwwroot/uploads
     ports:
       - "8080:8080"
     networks:
@@ -32,3 +34,4 @@ networks:
   sabmero_net:
 volumes:
   sabmero_pgdata:
+  sabmero_uploads:
