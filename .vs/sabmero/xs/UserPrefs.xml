@@ -1,17 +1,16 @@
 ﻿<Properties StartupConfiguration="{8C5191D5-7E73-4673-A585-DA6F9EF1B582}|http">
-  <MultiItemStartupConfigurations />
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.ItemProperties.sabmero PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.Workbench ActiveDocument="sabmero/docker-compose.yml">
+  <MonoDevelop.Ide.Workbench ActiveDocument="sabmero/Program.cs">
     <Files>
-      <File FileName="sabmero/Program.cs" Line="205" Column="7" />
+      <File FileName="sabmero/Program.cs" Line="1" Column="1" />
       <File FileName="sabmero/Properties/launchSettings.json" />
-      <File FileName="sabmero/Models/User.cs" Line="48" Column="2" />
-      <File FileName="sabmero/Models/OtpCode.cs" Line="17" Column="2" />
+      <File FileName="sabmero/Models/User.cs" />
+      <File FileName="sabmero/Models/OtpCode.cs" />
       <File FileName="sabmero/Models/Vendor.cs" />
       <File FileName="sabmero/Models/Category.cs" />
       <File FileName="sabmero/Models/Product.cs" />
@@ -21,21 +20,21 @@
       <File FileName="sabmero/Models/PromoCode.cs" />
       <File FileName="sabmero/Models/ReturnRequest.cs" />
       <File FileName="sabmero/Models/Review.cs" />
-      <File FileName="sabmero/Data/AppDbContext.cs" Line="50" Column="30" />
+      <File FileName="sabmero/Data/AppDbContext.cs" />
       <File FileName="sabmero/DTOs/Auth/RegisterDto.cs" />
       <File FileName="sabmero/DTOs/Auth/LoginDto.cs" />
       <File FileName="sabmero/DTOs/Auth/OtpDto.cs" />
-      <File FileName="sabmero/DTOs/Auth/AuthResponseDto.cs" Line="24" Column="2" />
+      <File FileName="sabmero/DTOs/Auth/AuthResponseDto.cs" />
       <File FileName="sabmero/Services/IJwtService.cs" />
       <File FileName="sabmero/Services/JwtService.cs" />
-      <File FileName="sabmero/Services/IAuthService.cs" Line="14" Column="62" />
-      <File FileName="sabmero/Services/AuthService.cs" Line="310" Column="17" />
+      <File FileName="sabmero/Services/IAuthService.cs" />
+      <File FileName="sabmero/Services/AuthService.cs" />
       <File FileName="sabmero/Controllers/HealthController.cs" />
-      <File FileName="sabmero/Controllers/AuthController.cs" Line="198" Column="2" />
-      <File FileName="sabmero/appsettings.json" Line="26" Column="2" />
+      <File FileName="sabmero/Controllers/AuthController.cs" />
+      <File FileName="sabmero/appsettings.json" Line="20" Column="26" />
       <File FileName="sabmero/appsettings.Development.json" />
       <File FileName="sabmero/Migrations/20260624172958_AddVendorRequestsKycAndInstallationLink.cs" />
-      <File FileName="sabmero/docker-compose.yml" Line="34" Column="18" />
+      <File FileName="sabmero/docker-compose.yml" Line="1" Column="1" />
       <File FileName="sabmero/DTOs/Admin/createvendoraccountDtos.cs" />
       <File FileName="sabmero/Services/AdminService.cs" />
       <File FileName="sabmero/Services/IAdminService.cs" />
@@ -44,28 +43,30 @@
       <File FileName="sabmero/DTOs/Order/OrderDtos.cs" />
       <File FileName="sabmero/DTOs/Vendor/VendorDtos.cs" />
       <File FileName="sabmero/Services/IVendorService.cs" />
-      <File FileName="sabmero/Services/OrderService.cs" Line="398" Column="2" />
-      <File FileName="sabmero/Services/VendorService.cs" Line="286" Column="2" />
+      <File FileName="sabmero/Services/VendorService.cs" />
       <File FileName="sabmero/Models/VendorRequest.cs" />
-      <File FileName="sabmero/Services/fcmpushservice.cs" Line="34" Column="24" />
-      <File FileName="sabmero/Services/emailservice.cs" Line="110" Column="2" />
-      <File FileName="sabmero/Services/ServiceBookingService.cs" Line="277" Column="2" />
-      <File FileName="sabmero/DTOs/Reset/passwordresetdtos.cs" Line="30" Column="2" />
-      <File FileName="sabmero/secrets/sabmero-firebase-adminsdk-fbsvc-2ab8c240ca.json" Line="14" Column="1" />
+      <File FileName="sabmero/Services/fcmpushservice.cs" />
+      <File FileName="sabmero/Services/emailservice.cs" />
+      <File FileName="sabmero/Services/ServiceBookingService.cs" />
+      <File FileName="sabmero/DTOs/Reset/passwordresetdtos.cs" />
+      <File FileName="sabmero/secrets/sabmero-firebase-adminsdk-fbsvc-2ab8c240ca.json" />
+      <File FileName="sabmero/Services/IOrderService.cs" />
+      <File FileName="sabmero/Services/PaymentService.cs" />
+      <File FileName="sabmero/Services/ProductService.cs" />
+      <File FileName="sabmero/Controllers/OrdersController.cs" />
+      <File FileName="sabmero/DTOs/Product/ProductDtos.cs" />
+      <File FileName="sabmero/Services/INotificationService.cs" />
+      <File FileName="sabmero/Controllers/BookingsController.cs" />
+      <File FileName="sabmero/Services/OrderService.cs" />
+      <File FileName="sabmero/Dockerfile" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
-          <Node name="sabmero">
-            <Node name="sabmero">
-              <Node name="Data" expanded="True" />
-              <Node name="secrets" expanded="True" />
-              <Node name="Services" expanded="True" />
-              <Node name="docker-compose.yml" selected="True" />
-            </Node>
-          </Node>
+          <Node name="sabmero" expanded="True" />
         </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
+  <MultiItemStartupConfigurations />
 </Properties>
