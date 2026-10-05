@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using sabmero.Data;
 using sabmero.DTOs.Auth;
 
@@ -42,10 +42,32 @@ public class KycService : IKycService
 
     public async Task<KycStatusDto?> GetStatusAsync(int userId)
     {
-        var user = await _db.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return null;
+
+        // ── Self-heal KYC/approval drift ─────────────────────────────────────
+        // A vendor's documents are reviewed when their account/request is
+        // approved, so an approved vendor is, by definition, KYC-verified.
+        // Some approval paths (e.g. the legacy direct-profile toggle, or rows
+        // created before this logic existed) set Vendor.IsApproved without also
+        // updating the user's KycStatus — which left an approved vendor stuck on
+        // the "Submit your KYC to start selling" banner. If we detect that
+        // mismatch here, correct and persist it so every surface agrees.
+        if (user.Role == "Vendor" && user.KycStatus != "Approved")
+        {
+            bool vendorApproved = await _db.Vendors
+                .AnyAsync(v => v.UserId == userId && v.IsApproved);
+
+            if (vendorApproved)
+            {
+                user.KycStatus = "Approved";
+                user.IsKycVerified = true;
+                user.KycRejectionReason = null;
+                await _db.SaveChangesAsync();
+                _logger.LogInformation(
+                    "Self-healed KYC status to Approved for approved vendor user {UserId}", userId);
+            }
+        }
 
         return Map(user.KycStatus, user.KycRejectionReason, user.KycDocumentPath, user.IsKycVerified);
     }

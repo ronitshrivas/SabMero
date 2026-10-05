@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<ReturnRequest> ReturnRequests { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
+    public DbSet<VendorPayment> VendorPayments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -199,6 +200,29 @@ public class AppDbContext : DbContext
             e.HasIndex(s => s.Key).IsUnique();
             e.Property(s => s.Key).HasMaxLength(100).IsRequired();
             e.Property(s => s.Value).HasMaxLength(600);
+        });
+
+        // ── VENDOR PAYMENTS (admin → vendor commission / settlement) ────────
+        modelBuilder.Entity<VendorPayment>(e =>
+        {
+            e.HasKey(vp => vp.Id);
+
+            // One Vendor → Many VendorPayments
+            e.HasOne(vp => vp.Vendor)
+             .WithMany()
+             .HasForeignKey(vp => vp.VendorId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.Property(vp => vp.Amount).HasPrecision(18, 2);
+            e.Property(vp => vp.Note).HasMaxLength(300);
+            e.Property(vp => vp.ScreenshotPath).HasMaxLength(400);
+            e.Property(vp => vp.Status).HasMaxLength(15).HasDefaultValue("Paid");
+        });
+
+        // ── VENDOR payment QR column size ──────────────────────────────────
+        modelBuilder.Entity<Vendor>(e =>
+        {
+            e.Property(v => v.PaymentQrPath).HasMaxLength(400);
         });
 
         // ── PROMO CODES ────────────────────────────────────────────────────

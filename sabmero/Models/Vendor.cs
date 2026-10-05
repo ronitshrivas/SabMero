@@ -11,6 +11,12 @@ public class Vendor
     public string BusinessName { get; set; } = string.Empty;
     public string BusinessAddress { get; set; } = string.Empty;
     public string? BusinessDocumentPath { get; set; }        // uploaded KYC doc
+
+    // The vendor's own payment QR (bank / FonePay / eSewa / Khalti). The admin
+    // scans this to pay the vendor their commission / settlement. Set by the
+    // vendor from the panel; null until they upload one.
+    public string? PaymentQrPath { get; set; }
+
     public bool IsApproved { get; set; } = false;
     public decimal CommissionRate { get; set; } = 10.0m;     // 10% default
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -236,6 +236,25 @@ public class VendorService : IVendorService
         if (commissionRate.HasValue)
             vendor.CommissionRate = commissionRate.Value;
 
+        // Keep the vendor's KYC/verification state in sync with approval so the
+        // vendor panel never shows an approved shop as "not verified".
+        var user = await _db.Users.FindAsync(vendor.UserId);
+        if (user != null)
+        {
+            if (approved)
+            {
+                user.IsKycVerified = true;
+                user.KycStatus = "Approved";
+                user.KycRejectionReason = null;
+            }
+            else if (user.KycStatus == "Approved")
+            {
+                // Approval revoked → vendor can no longer sell.
+                user.IsKycVerified = false;
+                user.KycStatus = "Pending";
+            }
+        }
+
         await _db.SaveChangesAsync();
         return (true, approved ? "Vendor approved." : "Vendor approval revoked.");
     }
