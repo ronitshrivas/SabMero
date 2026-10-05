@@ -91,6 +91,7 @@ builder.Services.AddScoped<IPromoService, PromoService>();
 builder.Services.AddScoped<IReturnService, ReturnService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IKycService, KycService>();
 builder.Services.AddScoped<IVendorPaymentService, VendorPaymentService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

@@ -35,5 +35,6 @@ services:
       - sabmero_net
 networks:
   sabmero_net:
+    external: true
 volumes:
   sabmero_pgdata:
