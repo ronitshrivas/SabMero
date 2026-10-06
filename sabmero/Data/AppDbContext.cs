@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
     public DbSet<VendorPayment> VendorPayments { get; set; }
+    public DbSet<RepairService> RepairServices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -186,6 +187,7 @@ public class AppDbContext : DbContext
             e.Property(sb => sb.PaymentScreenshotPath).HasMaxLength(400);
             e.Property(sb => sb.PaymentStatus).HasMaxLength(15).HasDefaultValue("Pending");
             e.Property(sb => sb.ServiceCharge).HasPrecision(18, 2);
+            e.Property(sb => sb.Description).HasMaxLength(1000);
 
             // Optional link to the order that spawned an installation booking.
             e.HasOne(sb => sb.RelatedOrder)
@@ -201,6 +203,16 @@ public class AppDbContext : DbContext
             e.HasIndex(s => s.Key).IsUnique();
             e.Property(s => s.Key).HasMaxLength(100).IsRequired();
             e.Property(s => s.Value).HasMaxLength(600);
+        });
+
+        // ── REPAIR SERVICES (admin-managed service catalog) ─────────────────
+        modelBuilder.Entity<RepairService>(e =>
+        {
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Name).HasMaxLength(100).IsRequired();
+            e.Property(r => r.Description).HasMaxLength(500);
+            e.Property(r => r.Charge).HasPrecision(18, 2);
+            e.Property(r => r.ImagePath).HasMaxLength(400);
         });
 
         // ── VENDOR PAYMENTS (admin → vendor commission / settlement) ────────

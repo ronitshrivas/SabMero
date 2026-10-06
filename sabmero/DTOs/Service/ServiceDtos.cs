@@ -24,6 +24,13 @@ public class CreateBookingDto
 
     public string? DamageImagePath { get; set; }   // optional photo of the problem
 
+    // All damage photos the customer uploaded (optional). The first is kept as
+    // DamageImagePath for backward compatibility; all are stored and returned.
+    public List<string>? DamageImagePaths { get; set; }
+
+    [MaxLength(1000)]
+    public string? Description { get; set; }   // the customer's problem description
+
     // "Cash" | "QR"
     public string PaymentMethod { get; set; } = "Cash";
 
@@ -49,6 +56,8 @@ public class BookingDto
     public double Longitude { get; set; }
     public string ServiceAddress { get; set; } = string.Empty;
     public string? DamageImagePath { get; set; }
+    public List<string> DamageImagePaths { get; set; } = new();
+    public string? Description { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime? CheckInTime { get; set; }
     public DateTime? CompletedTime { get; set; }

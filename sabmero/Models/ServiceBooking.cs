@@ -19,6 +19,8 @@ public class ServiceBooking
     public double Longitude { get; set; }
     public string ServiceAddress { get; set; } = string.Empty;
     public string? DamageImagePath { get; set; }             // photo uploaded by customer
+    public string? DamageImagePathsCsv { get; set; }         // all customer-uploaded damage photos (comma-separated paths)
+    public string? Description { get; set; }                 // the customer's problem description
     public string Status { get; set; } = "Pending";          // "Pending"|"Approved"|"Processing"|"OnTheWay"|"Completed"
     public DateTime? CheckInTime { get; set; }               // technician taps "Check-In"
     public DateTime? CompletedTime { get; set; }             // technician taps "Complete"

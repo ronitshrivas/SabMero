@@ -23,9 +23,8 @@ public class ServiceBookingService : IServiceBookingService
 
     public async Task<(bool Success, string Message, BookingDto? Data)> CreateAsync(int userId, CreateBookingDto dto)
     {
-        var allowedTypes = new[] { "Electrical", "CCTV", "Tech" };
-        if (!allowedTypes.Contains(dto.ServiceType))
-            return (false, "Service type must be Electrical, CCTV, or Tech.", null);
+        if (string.IsNullOrWhiteSpace(dto.ServiceType))
+            return (false, "Service type is required.", null);
 
         if (dto.BookingDate.Date < DateTime.UtcNow.Date)
             return (false, "Booking date cannot be in the past.", null);
@@ -49,7 +48,9 @@ public class ServiceBookingService : IServiceBookingService
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
             ServiceAddress = dto.ServiceAddress.Trim(),
-            DamageImagePath = dto.DamageImagePath,
+            DamageImagePath = FirstDamagePath(dto),
+            DamageImagePathsCsv = JoinDamagePaths(dto),
+            Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
             Status = "Pending",
             PaymentMethod = paymentMethod,
             PaymentScreenshotPath = paymentMethod == "QR" ? dto.PaymentScreenshotPath : null,
@@ -270,6 +271,8 @@ public class ServiceBookingService : IServiceBookingService
             Longitude = b.Longitude,
             ServiceAddress = b.ServiceAddress,
             DamageImagePath = b.DamageImagePath,
+            DamageImagePaths = SplitDamagePaths(b.DamageImagePathsCsv, b.DamageImagePath),
+            Description = b.Description,
             Status = b.Status,
             CheckInTime = b.CheckInTime,
             CompletedTime = b.CompletedTime,
@@ -279,5 +282,38 @@ public class ServiceBookingService : IServiceBookingService
             ServiceCharge = b.ServiceCharge,
             CreatedAt = b.CreatedAt
         };
+    }
+    // ── Damage-photo helpers ─────────────────────────────────────────────────
+    // The app may upload several photos; we keep them all as a comma-separated
+    // list and the first one in DamageImagePath for older clients.
+    private static List<string> AllDamagePaths(DTOs.Service.CreateBookingDto dto)
+    {
+        var list = new List<string>();
+        if (dto.DamageImagePaths != null)
+            list.AddRange(dto.DamageImagePaths.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()));
+        if (!string.IsNullOrWhiteSpace(dto.DamageImagePath) && !list.Contains(dto.DamageImagePath!.Trim()))
+            list.Insert(0, dto.DamageImagePath!.Trim());
+        return list;
+    }
+
+    private static string? FirstDamagePath(DTOs.Service.CreateBookingDto dto)
+    {
+        var all = AllDamagePaths(dto);
+        return all.Count > 0 ? all[0] : null;
+    }
+
+    private static string? JoinDamagePaths(DTOs.Service.CreateBookingDto dto)
+    {
+        var all = AllDamagePaths(dto);
+        return all.Count > 0 ? string.Join(",", all) : null;
+    }
+
+    private static List<string> SplitDamagePaths(string? csv, string? single)
+    {
+        if (!string.IsNullOrWhiteSpace(csv))
+            return csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        if (!string.IsNullOrWhiteSpace(single))
+            return new List<string> { single!.Trim() };
+        return new List<string>();
     }
 }
