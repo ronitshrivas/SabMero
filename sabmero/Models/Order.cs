@@ -11,6 +11,7 @@ public class Order
     public int? RiderId { get; set; }       // FK → Users (the delivery rider, assigned later)
     public decimal TotalAmount { get; set; }
     public decimal CommissionAmount { get; set; }
+    public decimal DeliveryFee { get; set; } = 0;     // admin-configurable delivery charge applied at checkout
     public string PaymentMethod { get; set; } = "COD";      // "COD" | "QR"
     public string PaymentStatus { get; set; } = "Pending";  // "Pending" | "Submitted" | "Verified" | "Rejected" | "Paid"
     public string? PaymentScreenshotPath { get; set; }      // QR payment proof uploaded by the customer

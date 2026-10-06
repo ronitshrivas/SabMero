@@ -1,11 +1,11 @@
 ﻿<Properties StartupConfiguration="{8C5191D5-7E73-4673-A585-DA6F9EF1B582}|http">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
   <MonoDevelop.Ide.ItemProperties.sabmero PreferredExecutionTarget="/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.Workbench ActiveDocument="sabmero/Program.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="sabmero/Migrations/20260711190403_AddProfilePictureFcmTokenAndOtpPurpose.cs">
     <Files>
       <File FileName="sabmero/Program.cs" Line="1" Column="1" />
       <File FileName="sabmero/Properties/launchSettings.json" />
@@ -31,10 +31,10 @@
       <File FileName="sabmero/Services/AuthService.cs" />
       <File FileName="sabmero/Controllers/HealthController.cs" />
       <File FileName="sabmero/Controllers/AuthController.cs" />
-      <File FileName="sabmero/appsettings.json" Line="20" Column="26" />
+      <File FileName="sabmero/appsettings.json" Line="22" Column="12" />
       <File FileName="sabmero/appsettings.Development.json" />
       <File FileName="sabmero/Migrations/20260624172958_AddVendorRequestsKycAndInstallationLink.cs" />
-      <File FileName="sabmero/docker-compose.yml" Line="1" Column="1" />
+      <File FileName="sabmero/docker-compose.yml" />
       <File FileName="sabmero/DTOs/Admin/createvendoraccountDtos.cs" />
       <File FileName="sabmero/Services/AdminService.cs" />
       <File FileName="sabmero/Services/IAdminService.cs" />
@@ -58,15 +58,26 @@
       <File FileName="sabmero/Services/INotificationService.cs" />
       <File FileName="sabmero/Controllers/BookingsController.cs" />
       <File FileName="sabmero/Services/OrderService.cs" />
-      <File FileName="sabmero/Dockerfile" Line="1" Column="1" />
+      <File FileName="sabmero/Dockerfile" />
+      <File FileName="sabmero/Migrations/20260711190403_AddProfilePictureFcmTokenAndOtpPurpose.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
-          <Node name="sabmero" expanded="True" />
+          <Node name="sabmero">
+            <Node name="sabmero">
+              <Node name="DTOs" expanded="True">
+                <Node name="Product" expanded="True" />
+                <Node name="Promo" expanded="True" />
+              </Node>
+              <Node name="Migrations" expanded="True">
+                <Node name="20260711190403_AddProfilePictureFcmTokenAndOtpPurpose.cs" selected="True" />
+              </Node>
+            </Node>
+          </Node>
         </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

@@ -90,7 +90,8 @@ public class OrderDto
     public string? RiderName { get; set; }
     public decimal SubTotal { get; set; }        // sum of items before discount
     public decimal Discount { get; set; }
-    public decimal TotalAmount { get; set; }     // final amount payable
+    public decimal DeliveryFee { get; set; }     // admin-configurable delivery charge
+    public decimal TotalAmount { get; set; }     // final amount payable (subtotal - discount + delivery)
     public decimal CommissionAmount { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
     public string PaymentStatus { get; set; } = string.Empty;

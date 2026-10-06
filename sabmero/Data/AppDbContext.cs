@@ -136,6 +136,7 @@ public class AppDbContext : DbContext
 
             e.Property(o => o.TotalAmount).HasPrecision(18, 2);
             e.Property(o => o.CommissionAmount).HasPrecision(18, 2);
+            e.Property(o => o.DeliveryFee).HasPrecision(18, 2);
             e.Property(o => o.Discount).HasPrecision(18, 2);
             e.Property(o => o.PaymentMethod).HasMaxLength(10).HasDefaultValue("COD");
             e.Property(o => o.PaymentStatus).HasMaxLength(15).HasDefaultValue("Pending");

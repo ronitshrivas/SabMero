@@ -107,6 +107,10 @@ public class OrderService : IOrderService
         var total = subTotal - discount;
         if (total < 0) total = 0;
 
+        // ── Delivery fee (admin-configurable, applied to the payable total) ──
+        var deliveryFee = await GetEffectiveDeliveryFeeAsync(subTotal);
+        total += deliveryFee;
+
         // QR orders that arrive WITH a screenshot go straight to "Submitted"
         // so they appear in the vendor/admin "awaiting verification" list.
         // (Previously the screenshot from the app was silently dropped here
@@ -119,6 +123,7 @@ public class OrderService : IOrderService
             UserId = userId,
             TotalAmount = total,
             CommissionAmount = Math.Round(commissionTotal, 2),
+            DeliveryFee = deliveryFee,
             PaymentMethod = isQr ? "QR" : "COD",
             PaymentScreenshotPath = hasScreenshot ? dto.PaymentScreenshotPath : null,
             PaymentStatus = hasScreenshot ? "Submitted" : "Pending",
@@ -422,6 +427,7 @@ public class OrderService : IOrderService
             RiderName = riderName,
             SubTotal = subTotal,
             Discount = order.Discount,
+            DeliveryFee = order.DeliveryFee,
             TotalAmount = order.TotalAmount,
             CommissionAmount = order.CommissionAmount,
             PaymentMethod = order.PaymentMethod,
@@ -435,4 +441,20 @@ public class OrderService : IOrderService
             InstallationBookingId = installationBookingId
         };
     }
+    // ── Delivery fee helpers ─────────────────────────────────────────────────
+    // Reads the admin-configured flat fee and optional free-above threshold from
+    // AppSettings. Free when the subtotal reaches the threshold (threshold > 0).
+    private async Task<decimal> GetEffectiveDeliveryFeeAsync(decimal subTotal)
+    {
+        var fee = ParseMoney((await _db.AppSettings.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Key == "DeliveryFee"))?.Value);
+        var freeAbove = ParseMoney((await _db.AppSettings.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Key == "FreeDeliveryAbove"))?.Value);
+        if (freeAbove > 0 && subTotal >= freeAbove) return 0m;
+        return fee < 0 ? 0m : fee;
+    }
+
+    private static decimal ParseMoney(string? v)
+        => decimal.TryParse(v, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0m;
 }
